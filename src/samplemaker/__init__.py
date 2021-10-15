@@ -1,5 +1,5 @@
 """
-.. figure:: gfx/SampleMaker_logo_rainbow.png
+
 This is the Python version of Sample Maker, a scripting tool for designing 
 lithographic masks in the GDSII format. Package `samplemaker` comes 
 with different tools and submodules for the creation and manipulation of basic
@@ -11,7 +11,7 @@ extended to different applications in micro and nano device fabrication.
 
 Sample Maker is developed and maintained by Leonardo Midolo (Niels Bohr Institute,
 University of Copenhagen). It is based on the MATLAB(R) code developed by Leonardo Midolo 
-between 2013 and 2019. The first version of the rewritten Python code has been released in September 2021.
+between 2013 and 2019. The first version of the rewritten Python code has been released in October 2021.
 
 .. include:: ./documentation.md
 """

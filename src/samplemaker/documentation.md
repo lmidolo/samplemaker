@@ -47,7 +47,7 @@ The C++ source code is also distributed and can be modified/re-compiled, if nece
 
 Compatibility
 ------------
-`samplemaker` requires Python 3.8.
+`samplemaker` requires Python 3.8 or higher.
 
        
 Contributing
