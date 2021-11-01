@@ -518,6 +518,21 @@ class DeviceTable:
                dev.use_references = self.use_references
                self._geometries[j][i]=dev.run()
                self._portmap[j][i] = deepcopy(dev._ports)
+               
+    def __place_portmap(self):
+        # Adjusts the portmap according to the current positions
+        if(self._geometries==[]):
+            self.__build_geomarray()
+        
+        for i in range(self.ncol): 
+            for j in range(self.nrow):
+                geom = self._geometries[j][i].copy()
+                geom.translate(self.pos_xy[j][i][0], self.pos_xy[j][i][1])
+        
+                for pp in self._portmap[j][i].values():
+                    pp.x0+=self.pos_xy[j][i][0]
+                    pp.y0+=self.pos_xy[j][i][1]
+                    #print(i,j,pp.name,pp.x0,pp.y0)
     
     def auto_align(self,min_dist_x: float, min_dist_y: float, numkey: int = 5):
         """
@@ -564,11 +579,11 @@ class DeviceTable:
                 if(bboxes[j][i].llx<x_extrL[i]): x_extrL[i] = bboxes[j][i].llx     
                 if(bboxes[j][i].lly<y_extrB[j]): y_extrB[j] = bboxes[j][i].lly
         
-        print(x_extrR,x_extrL,y_extrT,y_extrB)
+        #print(x_extrR,x_extrL,y_extrT,y_extrB)
         
         sx = [(x_extrR[i-1]-x_extrL[i]+min_dist_x) for i in range(1,self.ncol)]
         sy = [(y_extrT[j-1]-y_extrB[j]+min_dist_y) for j in range(1,self.nrow)]
-        print(sx,sy)
+        #print(sx,sy)
 
         for i in range(self.ncol):
             for j in range(self.nrow):
@@ -577,9 +592,8 @@ class DeviceTable:
                     self.pos_xy[j][i][0]+=sum(sx[0:i])
                 if(j!=0):
                     self.pos_xy[j][i][1]+=sum(sy[0:j])
-                print(self.pos_xy[j][i])
-        
-                
+                #print(self.pos_xy[j][i])
+                  
     
     def get_geometries(self) -> GeomGroup:
         """
@@ -593,6 +607,7 @@ class DeviceTable:
         """
         if(self._geometries==[]):
             self.__build_geomarray()
+        self.__place_portmap()
         g = GeomGroup()
         dev = self.dev
         portmap = self._portmap
@@ -615,6 +630,7 @@ class DeviceTable:
                         if links[0] in portmap[j][i-1] and links[1] in portmap[j][i]:
                             p1 = portmap[j][i-1][links[0]]
                             p2 = portmap[j][i][links[1]]
+
                             #print(i,j,p1.x0,p1.y0,p2.x0,p2.y0)
                             if(p1.connector_function == p2.connector_function):
                                 if(clalign and p1.dx() != 0 and p2.dx() != 0):
@@ -632,6 +648,7 @@ class DeviceTable:
                         if links[0] in portmap[j-1][i] and links[1] in portmap[j][i]:
                             p1 = portmap[j-1][i][links[0]]
                             p2 = portmap[j][i][links[1]]
+
                             #print(i,j,p1.x0,p1.y0,p2.x0,p2.y0)
                             if(p1.connector_function == p2.connector_function):
                                 if(rlalign and p1.dy() != 0 and p2.yx() != 0):
@@ -702,7 +719,6 @@ class Mask:
         self.writefields=[]
         self.cache=False
         self.clear()  # A new mask clears the pool
-        self.__basic_elements()
                 
     def clear(self):
         """
@@ -714,6 +730,9 @@ class Mask:
 
         """
         LayoutPool.clear()
+        _DeviceCountPool.clear()
+        _DeviceLocalParamPool.clear()
+        _DevicePool.clear()
         self.writefields.clear()
         self.__basic_elements()
                
@@ -749,17 +768,7 @@ class Mask:
         if "_CIRCLE" not in LayoutPool:
             c = make_circle(0, 0, 1, layer=0,to_poly=True, vertices=12)
             LayoutPool["_CIRCLE"] = c
-        # Adding writefields
-        if(len(self.writefields)>0):
-            wfs = GeomGroup()
-            for wf in self.writefields:
-                s = wf[0]
-                x = wf[1]
-                y = wf[2]
-                wfpath=make_path([-s/2,s/2,s/2,-s/2,-s/2],[-s/2,-s/2,s/2,s/2,-s/2],0.1,layer=10)
-                wfpath.translate(x, y)
-                wfs+=wfpath
-            self.addToMainCell(wfs)
+        
     
     def addToMainCell(self,geom_group: GeomGroup):
         """
@@ -801,8 +810,12 @@ class Mask:
     def __exportCache(self):
         print("Storing objects in cache file")
         cachefile=open(self.name+".cache","wb")
-        for key,val in LayoutPool.items():
-            val.keep_refs_only()
+        # Note that we do not need the full geometry, as we will just reload
+        # it from the GDS file. So we keep the references only.
+        # We might, however, need to re-compute the bounding boxes
+        # for example in table autoalignment. Thus we replace the reference
+        # groups with theyr bboxes
+        # TO BE IMPLEMENTED. CURRENTLY WE DO NOT DO ANYTHING, WHICH IS NOT OPTIMAL!!!
             
         data = (LayoutPool,_DeviceCountPool,_DeviceLocalParamPool,_DevicePool)
         pickle.dump(data,cachefile)
@@ -829,7 +842,8 @@ class Mask:
     
     def __cleanup_cellref(self):
         # Remove useless references
-        reflist = LayoutPool[self.mainsymbol].get_sref_list()
+        reflist = set()
+        reflist = LayoutPool[self.mainsymbol].get_sref_list(reflist)
         reflist.add(self.mainsymbol)
         
         unref=[]
@@ -837,7 +851,7 @@ class Mask:
         for ref in LayoutPool.keys():
             if ref not in reflist:
                 unref+=[ref]
-                
+       
         for ref in unref:
             LayoutPool.pop(ref,None)
         for key,value in _DevicePool.items():
@@ -922,7 +936,7 @@ class Mask:
 
         '''
         self.writefields+=[(wf_size,x0,y0,passes,shift)];
-        self.__basic_elements()
+
     
     def addWriteFieldGrid(self, wf_size: float, x0: float, y0:float,
                        Nx: int, Ny: int, passes: int = 1, shift: float=0):
@@ -954,6 +968,19 @@ class Mask:
         for i in range(Nx):
             for j in range(Ny):
                 self.addWriteField(wf_size, i*wf_size+x0, j*wf_size+y0,passes,shift)
+        
+        # Adding writefields
+        if(len(self.writefields)>0):
+            wfs = GeomGroup()
+            for wf in self.writefields:
+                s = wf[0]
+                x = wf[1]
+                y = wf[2]
+                wfpath=make_path([-s/2,s/2,s/2,-s/2,-s/2],[-s/2,-s/2,s/2,s/2,-s/2],0.1,layer=10)
+                wfpath.translate(x, y)
+                wfs+=wfpath
+            self.addToMainCell(wfs)
+        
                 
     def addDeviceTable(self, device_table: DeviceTable, x0: float, y0: float, cell: str = ""):
         """

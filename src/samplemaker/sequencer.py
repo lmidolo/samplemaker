@@ -252,6 +252,20 @@ class Sequencer:
         """
         return deepcopy(self.state)
     
+    def reset(self):
+        """
+        Resets the sequencer position state to 0,0
+        and sets direction back to zero.
+
+        Returns
+        -------
+        None.
+
+        """
+        self.state["x"]=0
+        self.state["y"]=0
+        self.state["a"]=0
+    
     def run(self):
         """
         Execute the sequence and get the final geometry object.

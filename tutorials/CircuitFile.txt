@@ -1,0 +1,12 @@
+# This is a comment
+.CIRCUIT my_circuit AAA BBB
+BASELIB_DCPL 0 0 E p1 inA p4 inB p3 AAA p2 BBB . gap 0.1
+BASELIB_FGC -30 0 W p1 inA .
+BASELIB_FGC 30 -15 S p1 inB .
+.ALIGN inA
+.END
+
+.CIRCUIT bigger input output
+X my_circuit 0 0 E AAA input BBB link . dev_BASELIB_DCPL_1::gap 0.2
+X my_circuit 40 12 E AAA link BBB output .
+.END

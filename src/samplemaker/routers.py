@@ -6,7 +6,9 @@ Automatic port-to-port routing functions.
 """
 
 import math
+import numpy as np
 from samplemaker.devices import DevicePort
+import samplemaker.makers as sm
 from copy import deepcopy
 
 # The following are routines for the connector
@@ -271,3 +273,68 @@ def WaveguideConnect(port1: "DevicePort",port2: "DevicePort",
             return True,seq
          
     return False,[]
+
+def ElbowRouter(port1: "DevicePort",port2: "DevicePort", offset: float = 5): 
+    """
+    Simple elbow connector based on Bezier curve, typically used for electrical interconnects.
+    Does not check collisions. 
+    The offset parameter controls how far should the connector go straight out 
+    of the ports before attempting a connection (using cubic Bezier).
+
+    Parameters
+    ----------
+    port1 : "DevicePort"
+        Start port for the connection.
+    port2 : "DevicePort"
+        End port for the connection.
+    offset : float, optional
+        How far should the connector stick away from ports. The default is 5.
+
+    Returns
+    -------
+    xpts : list
+        X coordinates of the connector path.
+    ypts : list
+        Y coordinates of the connector path.
+
+    """
+    x0 = port1.x0;
+    y0 = port1.y0;
+    r0 = port1.angle();
+    # Rotate all in the reference of port1
+    p2dot = sm.make_dot(port2.x0, port2.y0)
+    p2dot.rotate(x0, y0, -math.degrees(r0))
+    x1 = p2dot.x-x0;
+    y1 = p2dot.y-y0;
+    if(y1 == 0):
+        xpts = [0,x1];
+        ypts = [0,y1];
+    else:
+        aout = port2.angle()-r0%(2*math.pi);
+        # offset
+        xs = offset;
+        xs1 = xs+3*offset;
+        xe = x1+offset*math.cos(aout);
+        ye = y1+offset*math.sin(aout);
+        xe1 = xe+3*offset*math.cos(aout);
+        ye1 = ye+3*offset*math.sin(aout);
+    
+        t = np.array([0,0.25,0.5,0.75,1]);
+        xpts = np.power(1-t,3)*xs+3*np.power(1-t,2)*t*xs1+3*(1-t)*np.power(t,2)*xe1+np.power(t,3)*xe
+        ypts = 3*(1-t)*np.power(t,2)*ye1+np.power(t,3)*ye;
+        xpts = np.append([0],xpts);
+        xpts = np.append(xpts,[x1])
+        ypts = np.append([0],ypts);
+        ypts = np.append(ypts,[y1])
+        xpts = xpts.tolist()
+        ypts = ypts.tolist()
+
+    cost = math.cos(r0)
+    sint = math.sin(r0)
+    for i in range(len(xpts)):
+        x=xpts[i]
+        y=ypts[i]
+        xpts[i]=cost*(x)-sint*(y)+x0
+        ypts[i]=sint*(x)+cost*(y)+y0
+    
+    return xpts,ypts

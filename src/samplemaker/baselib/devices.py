@@ -14,6 +14,7 @@ The library provides the following devices:
 """
 
 import numpy as np
+import math
 from samplemaker.devices import Device, registerDevicesInModule
 import samplemaker.makers as sm
 from samplemaker.baselib.waveguides import BaseWaveguideSequencer, BaseWaveguidePort
@@ -91,6 +92,70 @@ class DirectionalCoupler(Device):
         self.addlocalport(BaseWaveguidePort( XP,-YP, "east", ss.options["defaultWidth"], "p4"))
         
         return dc
+
+class FocusingGratingCoupler(Device):
+    def initialize(self): 
+        self._name = "BASELIB_FGC"
+        self.set_description("Grating coupler demo.")
+    
+    def parameters(self):
+        self.addparameter('w0',0.3,'Width of the waveguide at the start', float)
+        self.addparameter('pitch',0.355,'Grating default pitch', float)
+        self.addparameter('ff',0.5,'Fill factor', float)
+        self.addparameter('theta',10,'Emission angle at central wavelength', float)
+        self.addparameter('lambda0',0.94,'Central wavelength', float)
+        self.addparameter('nr_Apo',11,'nr of the 1st arc with pitch and ff',int)
+        self.addparameter('ff_coef',0.5,'min ff_apod = ff_coef*ff', float);
+        self.addparameter('order_start',10,'Starting period', int);
+        self.addparameter('order',15,'Number of periods', int);
+        self.addparameter('diverg_angle',20,'GRT divergence angle/2, deg', float);
+        self.addparameter('pre_split',True,'Split in quads = false', bool); 
+
+    def geom(self):
+        # Grating first
+        p = self.get_params();
+        theta = math.radians(p["theta"])
+        div_angle = p["diverg_angle"]
+        q0 = p["order_start"]
+        qN = q0+p["order"]+1
+        lambda0 = p["lambda0"]
+        pitch = p["pitch"]
+        n = math.sin(theta)+lambda0/pitch # Effective refractive index
+        p0 = lambda0/math.sqrt(n*n-np.power(math.sin(theta),2));
+        ff = p["ff"]
+        nr_Apo = p["nr_Apo"]
+        ff_coef = p["ff_coef"]
+
+        g = sm.GeomGroup()        
+        for q in range(q0,qN):
+            b = q*p0
+            x0 = b*b*math.sin(theta)/(q*lambda0);
+            a = b*b*n/(q*lambda0);
+            if (q <= q0+nr_Apo-1):
+                ff_chi = ff-(1-ff_coef)*ff/(nr_Apo-2)*(q0+nr_Apo-q);
+            else:
+                ff_chi = ff
+            
+            w = ff_chi*pitch
+            g+=sm.make_arc(x0, 0, a, b, 0, w, -div_angle-5, div_angle+5,
+                           layer=3,to_poly=True,vertices=40,split=p["pre_split"])
+
+        # waveguide
+        Ltaper = 1
+        Gtaper = qN*pitch
+        Wtaper = Gtaper*math.tan(math.radians(div_angle))*2
         
+        
+        seq = [["T",Ltaper,p["w0"]],
+                         ["CENTER",0,0],
+                         ["T",Gtaper,Wtaper],['STATE','w',2.5],['S',1]]
+        
+        ss =  BaseWaveguideSequencer(seq)
+        g += ss.run()
+
+        self.addlocalport(BaseWaveguidePort(-Ltaper, 0, "west", p["w0"], "p1"))
+
+        return g
+
 # Register all devices here in this module
 registerDevicesInModule(__name__)

@@ -728,6 +728,9 @@ class NetListEntry:
             self.rot = 270
         self.portmap = portmap
         self.params = params
+        
+    def __hash__(self):
+        return hash((self.devname,self.x0,self.y0,self.rot,frozenset(self.portmap.items()),frozenset(self.params.items())))
                 
 
 class NetList:
@@ -753,7 +756,7 @@ class NetList:
         self.aligned_ports = []
     
     def __hash__(self):
-        return hash((self.name,tuple(self.external_ports),
+        return hash((self.name,tuple(self.entry_list),tuple(self.external_ports),
                      tuple(self.aligned_ports)))
     
     def set_external_ports(self, ext_ports: list):

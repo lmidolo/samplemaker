@@ -473,6 +473,8 @@ class GeomGroup:
 
         """
         self.group[:] =  [g for g in self.group if type(g)==SRef or type(g)==ARef]
+        
+                   
     
     def __get_boopy__(self,layer: int):
         pg0 = boopy.PolyGroup()
