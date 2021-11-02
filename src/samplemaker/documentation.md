@@ -47,14 +47,14 @@ The C++ source code is also distributed and can be modified/re-compiled, if nece
 
 Compatibility
 ------------
-`samplemaker` requires Python 3.8 or higher.
+`samplemaker` requires Python 3.8.
 
        
 Contributing
 ------------
-`samplemaker` is [on BitBucket]. Bug reports are welcome.
+`samplemaker` is [on GitHub]. Bug reports are welcome.
 
-[on BitBucket]: http://bitbucket.org/lmidolo/samplemaker
+[on GitHub]: https://github.com/lmidolo/samplemaker
 
 License
 -------

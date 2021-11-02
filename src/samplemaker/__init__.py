@@ -13,6 +13,8 @@ Sample Maker is developed and maintained by Leonardo Midolo (Niels Bohr Institut
 University of Copenhagen). It is based on the MATLAB(R) code developed by Leonardo Midolo 
 between 2013 and 2019. The first version of the rewritten Python code has been released in October 2021.
 
+This
+
 .. include:: ./documentation.md
 """
 
@@ -21,10 +23,7 @@ from typing import (  # noqa: F401
     Optional, Set, Tuple, Type, TypeVar, Union,
 )
 
-try:
-    from samplemaker._version import version as __version__  # noqa: F401
-except ImportError:
-    __version__ = '???'  # Package not installed
+__version__ = "5.0.1"
     
 __pdoc__: Dict[str, Union[bool, str]] = {}
 __pdoc__["samplemaker.Tutorials"]=False
