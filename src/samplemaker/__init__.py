@@ -13,7 +13,8 @@ Sample Maker is developed and maintained by Leonardo Midolo (Niels Bohr Institut
 University of Copenhagen). It is based on the MATLAB(R) code developed by Leonardo Midolo 
 between 2013 and 2019. The first version of the rewritten Python code has been released in October 2021.
 
-This
+This software has been realized with the financial support from 
+the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme (Grant agreement No. 949043, NANOMEQ).
 
 .. include:: ./documentation.md
 """
