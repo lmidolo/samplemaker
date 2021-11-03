@@ -550,6 +550,7 @@ class Device:
         None.
 
         """
+        self._description = descr
     
     def initialize(self):
         """

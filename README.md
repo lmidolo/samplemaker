@@ -12,7 +12,7 @@ the European Research Council (ERC) under the European Union’s Horizon 2020 re
 
 ### How do I get set up? ###
 
-* Install via pip (pip install git+git://github.com/lmidolo/samplemaker)
+* Install via pip (pip install git+https://github.com/lmidolo/samplemaker)
 * or clone the repository and set PYTHONPATH to the src/ subfolder
 * Download the tutorials
 * Additional documentation can be generated via pdoc3

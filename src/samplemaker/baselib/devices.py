@@ -95,7 +95,7 @@ class DirectionalCoupler(Device):
 
 class FocusingGratingCoupler(Device):
     def initialize(self): 
-        self._name = "BASELIB_FGC"
+        self.set_name("BASELIB_FGC")
         self.set_description("Grating coupler demo.")
     
     def parameters(self):

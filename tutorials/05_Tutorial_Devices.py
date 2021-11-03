@@ -34,9 +34,9 @@ class FreeFreeMembrane(Device):
     # We need to implement a few mandatory functions here:
     def initialize(self):
         # This function setups some variable, like the unique identifier name
-        self._name="CUSTOM_FFM"
+        self.set_name("CUSTOM_FFM")
         # Also add a description, useful for documenting later
-        self._description="Free free membrane as in 10.1103/PhysRevB.98.155316, etc etc"
+        self.set_description("Free free membrane as in 10.1103/PhysRevB.98.155316, etc etc")
                 
     def parameters(self):
         # define all the paramters of the device and their default values.

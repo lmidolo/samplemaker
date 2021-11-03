@@ -66,8 +66,8 @@ class ElectricalPort(DevicePort):
 class FreeFreeMembraneELE(FreeFreeMembrane):
     def initialize(self):
         super().initialize() # useless in this case but always good practice
-        self._name = "CUSTOM_FFM_E"
-        self._description = "Electrified version of the free free membrane"
+        self.set_name("CUSTOM_FFM_E")
+        self.set_description("Electrified version of the free free membrane")
     
     def parameters(self):
         super().parameters() # Inherit all parameters
