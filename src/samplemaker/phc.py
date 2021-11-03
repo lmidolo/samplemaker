@@ -183,6 +183,25 @@ class Crystal:
         """
         self.remove_at_index(self.coord_to_index(crystal.xpts, crystal.ypts))      
         
+    def add_crystal(self, crystal: "Crystal"):
+        """
+        Adds a crystal to the current crystal.
+
+        Parameters
+        ----------
+        crystal : Crystal
+            Another crystal to be added to the existing one.
+
+        Returns
+        -------
+        None.
+
+        """
+        self.xpts = np.append(self.xpts,crystal.xpts)
+        self.ypts = np.append(self.ypts,crystal.ypts)
+        self.params = np.append(self.params,crystal.params,axis=1)
+        
+    
     def copy(self):
         """
         Create a deep copy of the crystal.
