@@ -413,6 +413,8 @@ class DeviceTable:
 
         """
         self.pos_xy = positions
+        self.__build_geomarray()
+
     
     def set_linked_ports(self,col_linkports: tuple = (), row_linkports: tuple =()):
         """
@@ -468,6 +470,7 @@ class DeviceTable:
 
         """
         self.device_rotation=device_rotation
+        self.__build_geomarray()
         
     def set_annotations(self, annotations: DeviceTableAnnotations):
         """
