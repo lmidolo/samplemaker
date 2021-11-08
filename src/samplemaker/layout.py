@@ -390,11 +390,12 @@ class DeviceTable:
         self.device_rotation = 0
         self.annotations = None
         self.use_references = True 
-        self.pos_xy = (((0,0),),) # A colsxrows tuple of coordinates for placing the elements
+        self.pos_xy =  tuple([tuple([(0,0) for i in range(ncol)]) for j in range(nrow)]) # A colsxrows tuple of coordinates for placing the elements
         self._external_ports = dict() # Stores the output ports 
         self._geometries=[]
         self._portmap=[]
-        self.auto_align(0, 0)
+        # This seems a rather useless waste of time/energy
+        #self.auto_align(0, 0)
     
     def set_table_positions(self, positions: tuple):
         """
@@ -529,7 +530,7 @@ class DeviceTable:
         
         for i in range(self.ncol): 
             for j in range(self.nrow):
-                geom = self._geometries[j][i].copy()
+                geom = self._geometries[j][i]
                 geom.translate(self.pos_xy[j][i][0], self.pos_xy[j][i][1])
         
                 for pp in self._portmap[j][i].values():
@@ -562,7 +563,7 @@ class DeviceTable:
         if(self._geometries==[]):
             self.__build_geomarray()
         
-        # Get all BB
+        # Get all BB (NOTE: this is slow for large devices with lots of features)
         bboxes = [[self._geometries[j][i].bounding_box() for i in range(self.ncol)] for j in range(self.nrow)]
         self.pos_xy = [[[0,0] for i in range(self.ncol)] for j in range(self.nrow)]
         # Place them according to the numkey point
@@ -616,8 +617,8 @@ class DeviceTable:
         portmap = self._portmap
         for i in range(self.ncol): 
             for j in range(self.nrow):
-                geom = self._geometries[j][i].copy()
-                geom.translate(self.pos_xy[j][i][0], self.pos_xy[j][i][1])
+                geom = self._geometries[j][i]
+                # The position is already set during __place_portmap()
                 g+=geom
                 # annotations
                 if(self.annotations):
