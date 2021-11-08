@@ -669,7 +669,7 @@ class DeviceTable:
         return g
    
     @staticmethod
-    def Regular(cols:int,rows:int,ax:float,ay:float,bx:float,by:float) -> tuple:
+    def Regular(cols:int,rows:int,ax:float,ay:float,bx:float,by:float, x0:float = 0, y0:float = 0) -> tuple:
         """
         This static method produces a regular table array. It returns a tuple
         that can be passed to `DeviceTable.set_table_positions`.
@@ -688,6 +688,10 @@ class DeviceTable:
             x-step along columns.
         by : float
             y-step along columns.
+        x0 : float, optional
+            x-coordinate of the origin. The default is 0
+        y0 : float, optional
+            y-coordinate of the origin. The default is 0
 
         Returns
         -------
@@ -695,7 +699,7 @@ class DeviceTable:
             3-dimensional tuple of positions.
 
         """
-        return tuple([tuple([(i*ax+j*bx,i*ay+j*by) for i in range(cols)]) for j in range(rows)])
+        return tuple([tuple([(x0+i*ax+j*bx,y0+i*ay+j*by) for i in range(cols)]) for j in range(rows)])
     
     
 
