@@ -201,7 +201,7 @@ class MarkerSet(Marker):
 
 class DeviceTableAnnotations:
     def __init__(self,rowfmt: str, colfmt: str, xoff: float, yoff: float, rowvars: tuple, colvars: tuple,
-                 text_width: float =10, text_height: float =1,
+                 text_width: float =1, text_height: float =10,
                  left: bool = True,right: bool =True,above: bool = True,below: bool = True):
         """
         Initalize the DeviceTableAnnotations class that controls how text is produced in tables.
@@ -228,9 +228,9 @@ class DeviceTableAnnotations:
         colvars : tuple
             Same as colvars but for columns.
         text_width : float, optional
-            Size of text to be rendered. The default is 10.
-        text_height : float, optional
             Width of text to be rendered. The default is 1.
+        text_height : float, optional
+            Size of text to be rendered. The default is 10.
         left : bool, optional
             Render header on the left side of the table. The default is True.
         right : bool, optional
@@ -324,19 +324,19 @@ class DeviceTableAnnotations:
         if(self.left and j==0):
             x = x0-self.xoff
             y = y0
-            g+= make_text(x,y,rowtxt,self.text_width,self.text_height)
+            g+= make_text(x,y,rowtxt,self.text_height,self.text_width)
         if(self.right and j==(cols-1)):
             x = x0+self.xoff
             y = y0
-            g+= make_text(x,y,rowtxt,self.text_width,self.text_height)
+            g+= make_text(x,y,rowtxt,self.text_height,self.text_width)
         if(self.above and i==(rows-1)):
             x = x0
             y = y0+self.yoff
-            g+= make_text(x,y,coltxt,self.text_width,self.text_height)
+            g+= make_text(x,y,coltxt,self.text_height,self.text_width)
         if(self.below and i==0):
             x = x0
             y = y0-self.yoff
-            g+= make_text(x,y,coltxt,self.text_width,self.text_height)
+            g+= make_text(x,y,coltxt,self.text_height,self.text_width)
         if(self.to_poly):
             g.all_to_poly()
         return g        
