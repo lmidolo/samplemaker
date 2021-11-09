@@ -193,7 +193,7 @@ import numpy as np
 from copy import deepcopy
 from samplemaker.shapes import GeomGroup, Poly
 from samplemaker.makers import make_sref, make_text
-from samplemaker import LayoutPool, _DeviceCountPool, _DeviceLocalParamPool, _DevicePool
+from samplemaker import LayoutPool, _DeviceCountPool, _DeviceLocalParamPool, _DevicePool, _BoundingBoxPool
 from samplemaker.gdswriter import GDSWriter
 from samplemaker.gdsreader import GDSReader
 
@@ -609,6 +609,7 @@ class Device:
                 _DeviceCountPool[srefname] += 1
                 srefname += "_%0.4i"%_DeviceCountPool[srefname]
                 LayoutPool[srefname] = self.geom()
+                _BoundingBoxPool[srefname] = LayoutPool[srefname].bounding_box()
                 _DevicePool[hsh] = srefname
                 _DeviceLocalParamPool[hsh] = deepcopy(self._localp)
             else:

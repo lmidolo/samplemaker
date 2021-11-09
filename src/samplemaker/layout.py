@@ -90,11 +90,11 @@ This is done via the `DeviceTableAnnotations` class.
 """
 
 from samplemaker.makers import make_aref, make_path, make_circle, make_text
-from samplemaker.shapes import GeomGroup
+from samplemaker.shapes import GeomGroup, Box
 from samplemaker.gdswriter import GDSWriter
 from samplemaker.gdsreader import GDSReader
 from samplemaker.devices import Device
-from samplemaker import LayoutPool, _DevicePool, _DeviceCountPool, _DeviceLocalParamPool
+from samplemaker import LayoutPool, _DevicePool, _DeviceCountPool, _DeviceLocalParamPool, _BoundingBoxPool
 import pickle # for cacheing
 from copy import deepcopy
 import math
@@ -744,6 +744,7 @@ class Mask:
         _DeviceCountPool.clear()
         _DeviceLocalParamPool.clear()
         _DevicePool.clear()
+        _BoundingBoxPool.clear()
         self.writefields.clear()
         self.__basic_elements()
                
@@ -779,6 +780,7 @@ class Mask:
         if "_CIRCLE" not in LayoutPool:
             c = make_circle(0, 0, 1, layer=0,to_poly=True, vertices=12)
             LayoutPool["_CIRCLE"] = c
+            _BoundingBoxPool["_CIRCLE"] = Box(-1,-1,2,2)
         
     
     def addToMainCell(self,geom_group: GeomGroup):
@@ -826,9 +828,11 @@ class Mask:
         # We might, however, need to re-compute the bounding boxes
         # for example in table autoalignment. Thus we replace the reference
         # groups with theyr bboxes
-        # TO BE IMPLEMENTED. CURRENTLY WE DO NOT DO ANYTHING, WHICH IS NOT OPTIMAL!!!
+        for key,val in LayoutPool.items():
+            val.keep_refs_only()
+                
             
-        data = (LayoutPool,_DeviceCountPool,_DeviceLocalParamPool,_DevicePool)
+        data = (LayoutPool,_DeviceCountPool,_DeviceLocalParamPool,_DevicePool,_BoundingBoxPool)
         pickle.dump(data,cachefile)
         cachefile.close()
         print("Done.")
@@ -848,6 +852,8 @@ class Mask:
                     _DeviceLocalParamPool[key]=data[2][key]
                 for key in data[3].keys():                
                     _DevicePool[key]=data[3][key]
+                for key in data[4].keys():                
+                    _BoundingBoxPool[key]=data[4][key]
         except IOError:
             pass
     

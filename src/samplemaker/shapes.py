@@ -69,6 +69,7 @@ import math
 from pkg_resources import resource_filename
 import samplemaker.resources.boopy as boopy
 from typing import List
+from samplemaker import _BoundingBoxPool
 
 _glyphs = dict()
 
@@ -1288,7 +1289,10 @@ class SRef(RefBase):
         self.group = group
     
     def bounding_box(self):
-        bb = self.group.bounding_box()
+        if(self.cellname in _BoundingBoxPool):
+            bb = _BoundingBoxPool[self.cellname]
+        else:
+            bb = self.group.bounding_box()
         p = bb.toPoly()
         p.scale(0,0,self.mag,self.mag)
         p.rotate_translate(self.x0,self.y0,self.angle)
