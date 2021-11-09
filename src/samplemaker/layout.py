@@ -314,26 +314,26 @@ class DeviceTableAnnotations:
         rowtxt = rowtxt.replace("%J",str(j))
         for v in range(len(self.colvars)):
             pstr = "%C"+str(v)
-            coltxt = coltxt.replace(pstr,str(coldict[self.colvars[v]][i]))
-            rowtxt = rowtxt.replace(pstr,str(coldict[self.colvars[v]][i]))
+            coltxt = coltxt.replace(pstr,str(coldict[self.colvars[v]][j]))
+            rowtxt = rowtxt.replace(pstr,str(coldict[self.colvars[v]][j]))
         for v in range(len(self.rowvars)):
             pstr = "%R"+str(v)
-            coltxt = coltxt.replace(pstr,str(rowdict[self.rowvars[v]][j]))
-            rowtxt = rowtxt.replace(pstr,str(rowdict[self.rowvars[v]][j]))  
+            coltxt = coltxt.replace(pstr,str(rowdict[self.rowvars[v]][i]))
+            rowtxt = rowtxt.replace(pstr,str(rowdict[self.rowvars[v]][i]))  
         g = GeomGroup();
-        if(self.left and i==0):
+        if(self.left and j==0):
             x = x0-self.xoff
             y = y0
             g+= make_text(x,y,rowtxt,self.text_width,self.text_height)
-        if(self.right and i==(cols-1)):
+        if(self.right and j==(cols-1)):
             x = x0+self.xoff
             y = y0
             g+= make_text(x,y,rowtxt,self.text_width,self.text_height)
-        if(self.above and j==(rows-1)):
+        if(self.above and i==(rows-1)):
             x = x0
             y = y0+self.yoff
             g+= make_text(x,y,coltxt,self.text_width,self.text_height)
-        if(self.below and j==0):
+        if(self.below and i==0):
             x = x0
             y = y0-self.yoff
             g+= make_text(x,y,coltxt,self.text_width,self.text_height)
@@ -394,9 +394,7 @@ class DeviceTable:
         self._external_ports = dict() # Stores the output ports 
         self._geometries=[]
         self._portmap=[]
-        # This seems a rather useless waste of time/energy
-        #self.auto_align(0, 0)
-    
+            
     def set_table_positions(self, positions: tuple):
         """
         Defines the position of each element using a 3-dimensional tuple of the 
@@ -414,9 +412,13 @@ class DeviceTable:
 
         """
         self.pos_xy = positions
-        self.__build_geomarray()
+        self._geometries=[]
+        self._portmap=[]
 
-    
+    def shift_table_origin(self, dx: float, dy: float):
+        newpos = tuple([tuple([(dx+self.pos_xy[i][j][0],dy+self.pos_xy[i][j][1]) for j in range(self.ncol)]) for i in range(self.nrow)])
+        self.set_table_positions(newpos)
+        
     def set_linked_ports(self,row_linkports: tuple = (), col_linkports: tuple =()):
         """
         Automatically route ports between devices across columns and rows.
@@ -471,7 +473,8 @@ class DeviceTable:
 
         """
         self.device_rotation=device_rotation
-        self.__build_geomarray()
+        self._geometries=[]
+        self._portmap=[]
         
     def set_annotations(self, annotations: DeviceTableAnnotations):
         """
@@ -668,7 +671,7 @@ class DeviceTable:
                 # Store external ports to expose them
                 for pp in portmap[j][i].values():
                     p1 = deepcopy(pp)
-                    p1.name+="_%i_%i"%(i,j)
+                    p1.name+="_%i_%i"%(j,i)
                     self._external_ports[p1.name]=p1
         return g
    
