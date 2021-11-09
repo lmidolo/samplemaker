@@ -311,7 +311,24 @@ class Device:
         self._description = "No description yet"
         self.use_references = True
     
+    def __flatdict(self,d,parent_str):
+        flatdict=dict()
+        for key,value in d.items():
+            if type(value)==dict:
+                newdict = self.__flatdict(value,parent_str+key+"::")
+                for key,value in newdict.items():
+                    flatdict[key]=value
+            else:
+                if type(value)!=list:
+                    flatdict[parent_str+key]=value
+        return flatdict
+       
     def __hash__(self):
+        if(hasattr(self,"_seq")):
+            fldict = self.__flatdict(self._seq.options,"")
+            return hash((frozenset(self._p.items()), self._name, frozenset(fldict.items())))
+    
+        
         return hash((frozenset(self._p.items()), self._name))
     
     def angle(self):
@@ -439,6 +456,28 @@ class Device:
         """
         self._localp["_ports_"][port.name] = port
     
+    def get_localport(self, portname: str):
+        """
+        Returns the local port (i.e. within the geom() function.)
+
+        Parameters
+        ----------
+        portname : str
+            The port name.
+
+        Returns
+        -------
+        port: DevicePort
+            The port (empty if it does not exists).
+
+        """
+        lports = self._localp["_ports_"]
+        if(portname in lports):
+            return lports[portname]
+        else:
+            print("Could not find port named", portname, "in",self._name, "as it was not defined by device.")
+            return DevicePort(0,0,True,True)
+    
     def set_param(self,param_name: str, value):
         """
         Change a paramter. To be called after build().
@@ -518,7 +557,7 @@ class Device:
             return self._ports[port_name]
         else:
             print("Could not find port named", port_name, "in",self._name, "as it was not defined by device.")
-            return DevicePort()
+            return DevicePort(0,0,True,True)
         
     def set_name(self, name: str):
         """
@@ -796,7 +835,7 @@ class NetList:
         self.aligned_ports = aligned_ports
         
     @classmethod
-    def ImportCircuit(cls, file_name: str, circuit_name: str):
+    def ImportCircuit(cls, file_name: str, circuit_name: str = ""):
         """
         Generates a NetList object from a circuit file.
         The input is a text file with circuit description similar to the
@@ -809,8 +848,9 @@ class NetList:
             NetList class.
         file_name : str
             The circuit filename.
-        circuit_name : str
-            The subcircuit to load inside the circuit file.
+        circuit_name : str. optional
+            The subcircuit to load inside the circuit file, if empty the entire
+            circuit structure is read.
 
         Returns
         -------
@@ -868,7 +908,8 @@ class NetList:
                         cin+=2
                     current_entrylist.append(NetListEntry(devname, x, y, rot, portdict, params))
                     
-                    
+        if circuit_name=="":
+            return all_lists
         return all_lists[circuit_name]
         
     
@@ -979,6 +1020,11 @@ class Circuit(Device):
                 return g
             dev=_DeviceList[nle.devname].build()
             dev.use_references = self.use_references
+            # Force sequencer reset if has _seq subfield
+            # Note: this is needed to force the device to behave as if it does 
+            # not enter in a sequencer
+            if(hasattr(dev,"_seq")):
+                dev._seq.reset()               
             # Set all parameter from Netlist hierarchy
             dev._p = self._p["dev_%s_%i"%(nle.devname,i)]
             i+=1
