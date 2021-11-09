@@ -314,12 +314,16 @@ class DeviceTableAnnotations:
         rowtxt = rowtxt.replace("%J",str(j))
         for v in range(len(self.colvars)):
             pstr = "%C"+str(v)
-            coltxt = coltxt.replace(pstr,str(coldict[self.colvars[v]][j]))
-            rowtxt = rowtxt.replace(pstr,str(coldict[self.colvars[v]][j]))
+            rval = coldict[self.colvars[v]][j]
+            rval = round(rval*1000)/1000
+            coltxt = coltxt.replace(pstr,str(rval))
+            rowtxt = rowtxt.replace(pstr,str(rval))
         for v in range(len(self.rowvars)):
             pstr = "%R"+str(v)
-            coltxt = coltxt.replace(pstr,str(rowdict[self.rowvars[v]][i]))
-            rowtxt = rowtxt.replace(pstr,str(rowdict[self.rowvars[v]][i]))  
+            rval = rowdict[self.rowvars[v]][i]
+            rval = round(rval*1000)/1000
+            coltxt = coltxt.replace(pstr,str(rval))
+            rowtxt = rowtxt.replace(pstr,str(rval))  
         g = GeomGroup();
         if(self.left and j==0):
             x = x0-self.xoff

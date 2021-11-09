@@ -361,6 +361,25 @@ class Device:
         self._hv = i%2==1
         self._bf = math.floor(i/2)==1
         
+    def set_position(self, x0: float, y0: float):
+        """
+        Changes the position of the device
+
+        Parameters
+        ----------
+        x0 : float
+            X offset.
+        y0 : float
+            Y offset.
+
+        Returns
+        -------
+        None.
+
+        """
+        self._x0=x0
+        self._y0=y0
+        
     def addport(self,port: DevicePort):
         """
         Call this from the ports() method to add a port to the device.
@@ -477,6 +496,24 @@ class Device:
         else:
             print("Could not find port named", portname, "in",self._name, "as it was not defined by device.")
             return DevicePort(0,0,True,True)
+    
+    def remove_localport(self, portname: str):
+        """
+        Removes a local port.
+
+        Parameters
+        ----------
+        portname : str
+            The name of the port to be removed.
+
+        Returns
+        -------
+        None.
+
+        """
+        lports = self._localp["_ports_"]
+        if(portname in lports):
+            self._localp["_ports_"].pop(portname)
     
     def set_param(self,param_name: str, value):
         """
