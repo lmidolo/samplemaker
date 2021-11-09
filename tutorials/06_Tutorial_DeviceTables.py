@@ -38,9 +38,9 @@ tab.auto_align(10, 10, numkey=1)
 
 
 # We can add some annotations (i.e. text) around the table (a bit like table headers)
-tab.set_annotations(smlay.DeviceTableAnnotations("L=%C0", "R=%R0", 
+tab.set_annotations(smlay.DeviceTableAnnotations("R=%R0", "L=%C0", 
                                                           80, 80, 
-                                                          ("L",), ("R",)))
+                                                          ("R",),("L",)))
 
 # In the above function, the first two arguments are the text format for columns and rows, respectively.
 # The format can contain any string text and special symbols like %C0, %C1... or %R0, %R1.. that will be 

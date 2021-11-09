@@ -200,7 +200,7 @@ class MarkerSet(Marker):
         return g
 
 class DeviceTableAnnotations:
-    def __init__(self,colfmt: str, rowfmt: str, xoff: float, yoff: float, colvars: tuple, rowvars: tuple,
+    def __init__(self,rowfmt: str, colfmt: str, xoff: float, yoff: float, rowvars: tuple, colvars: tuple,
                  text_width: float =10, text_height: float =1,
                  left: bool = True,right: bool =True,above: bool = True,below: bool = True):
         """
@@ -211,22 +211,22 @@ class DeviceTableAnnotations:
 
         Parameters
         ----------
-        colfmt : str
-            A template string for formatting the column text. %I and %J will be replaced
+        rowfmt : str
+            A template string for formatting the rows text. %I and %J will be replaced
             with the row and column number, respectively. %Cn and %Rn will be replaced by
             the n-th column and row variable value, defined in rowvars and colvars. For example
             if the colvars is ("var0","var1",), the format %C0 will be replaced
             by the value of var0 on each column and %C1 will be replaced by the value of var1.
-        rowfmt : str
-            A template string for formatting the row text. Same as colfmt.
+        colfmt : str
+            A template string for formatting the column text. Same as rowfmt.
         xoff : float
             Distance of header text from the edge of the table in the x direction.
         yoff : float
             As xoff but in the y direction.
-        colvars : tuple
-            A tuple containing a list of varable names that will change along columns.
         rowvars : tuple
-            Same as colvars but for rows.
+            A tuple containing a list of varable names that will change along rows.
+        colvars : tuple
+            Same as colvars but for columns.
         text_width : float, optional
             Size of text to be rendered. The default is 10.
         text_height : float, optional
@@ -276,7 +276,7 @@ class DeviceTableAnnotations:
         """
         self.to_poly = to_poly
     
-    def render(self,i: int,j: int,cols: int,rows: int,x0: float,y0: float,coldict: dict, rowdict: dict)-> GeomGroup:
+    def render(self,i: int,j: int,rows: int,cols: int,x0: float,y0: float, rowdict: dict, coldict: dict)-> GeomGroup:
         """
         Renders the text for a given element in a table. This function should not be called
         by the user. It is intended to be run by the DeviceTable functions.
@@ -287,18 +287,18 @@ class DeviceTableAnnotations:
             Row index of the table.
         j : int
             Column index of the table.
-        cols : int
-            Number of columns.
         rows : int
             Number of rows.
+        cols : int
+            Number of columns.
         x0 : float
             X-Position of the item on the table.
         y0 : float
             Y-Position of the item on the table.
-        coldict : dict
-            The dictionary associating the variables and values that change along columns.
         rowdict : dict
             The dictionary associating the variables and values that change along rows.
+        coldict : dict
+            The dictionary associating the variables and values that change along columns.
 
         Returns
         -------
@@ -417,16 +417,16 @@ class DeviceTable:
         self.__build_geomarray()
 
     
-    def set_linked_ports(self,col_linkports: tuple = (), row_linkports: tuple =()):
+    def set_linked_ports(self,row_linkports: tuple = (), col_linkports: tuple =()):
         """
         Automatically route ports between devices across columns and rows.
 
         Parameters
         ----------
-        col_linkports : tuple, optional
-            Tuple of tuples containing port names that should be linked along columns. The default is ().
         row_linkports : tuple, optional
             Tuple of tuples containing port names that should be linked along rows. The default is ().
+        col_linkports : tuple, optional
+            Tuple of tuples containing port names that should be linked along columns. The default is ().
 
         Returns
         -------
@@ -437,16 +437,16 @@ class DeviceTable:
         self.row_linkports=row_linkports
         
     
-    def set_aligned_ports(self, align_columns: bool = False, align_rows: bool = False):
+    def set_aligned_ports(self, align_rows: bool = False, align_columns: bool = False):
         """
         Align ports along columns and rows. 
 
         Parameters
         ----------
-        align_columns : bool, optional
-            If true, the first pair specified in col_linkports will be aligned. The default is False.
         align_rows : bool, optional
             If true, the first pair specified in row_linkports will be aligned. The default is False.
+        align_columns : bool, optional
+            If true, the first pair specified in col_linkports will be aligned. The default is False.
 
         Returns
         -------
@@ -622,7 +622,7 @@ class DeviceTable:
                 g+=geom
                 # annotations
                 if(self.annotations):
-                    g+=self.annotations.render(i,j,self.ncol,self.nrow,self.pos_xy[j][i][0],self.pos_xy[j][i][1],self.colvars, self.rowvars)
+                    g+=self.annotations.render(j,i,self.nrow,self.ncol,self.pos_xy[j][i][0],self.pos_xy[j][i][1],self.rowvars,self.colvars)
                 
                 # Column linking
                 clports = self.col_linkports
@@ -673,17 +673,17 @@ class DeviceTable:
         return g
    
     @staticmethod
-    def Regular(cols:int,rows:int,ax:float,ay:float,bx:float,by:float, x0:float = 0, y0:float = 0) -> tuple:
+    def Regular(rows:int,cols:int,ax:float,ay:float,bx:float,by:float, x0:float = 0, y0:float = 0) -> tuple:
         """
         This static method produces a regular table array. It returns a tuple
         that can be passed to `DeviceTable.set_table_positions`.
 
         Parameters
         ----------
-        cols : int
-            Number of columns.
         rows : int
             Number of rows.
+        cols : int
+            Number of columns.
         ax : float
             x-step along rows.
         ay : float

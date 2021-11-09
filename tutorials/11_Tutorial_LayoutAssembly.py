@@ -58,7 +58,7 @@ tab = smlay.DeviceTable(cir,7, 5,
                         {"dev_BASELIB_DCPL_1::gap":np.array([0.1,0.12,0.14,0.16,0.18,0.20,0.22])}, 
                          {"dev_BASELIB_DCPL_1::width":np.array([0.3,0.31,0.32,0.33,0.34])})
 # Specify the position 
-tab.set_table_positions(tab.Regular(5, 7, 70, 0, 0, 50))
+tab.set_table_positions(tab.Regular(7,5, 70, 0, 0, 50))
 
 tabg = tab.get_geometries()
 geomE+=tabg

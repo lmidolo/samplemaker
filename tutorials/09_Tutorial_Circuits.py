@@ -79,9 +79,9 @@ geomE+=c2g
 tab = smlay.DeviceTable(cir, 1, 10, {}, {})
 # Specify the position (let's offset them a little bit as we move over columns)
 # We do this by setting ax=30 and ay = 15
-tab.set_table_positions(tab.Regular(10, 1, 40, 15, 0, 0))
+tab.set_table_positions(tab.Regular(1,10, 40, 15, 0, 0))
 # Now we can auto-link columns!
-tab.set_linked_ports((("BBB","AAA"),)) # links BBB to AAA of the next
+tab.set_linked_ports((),(("BBB","AAA"),)) # links BBB to AAA of the next
 
 # Let's just get the geometries from the table
 tabg = tab.get_geometries()
