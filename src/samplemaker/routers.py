@@ -306,7 +306,7 @@ def ElbowRouter(port1: "DevicePort",port2: "DevicePort", offset: float = 5):
     p2dot.rotate(x0, y0, -math.degrees(r0))
     x1 = p2dot.x-x0;
     y1 = p2dot.y-y0;
-    if(y1 == 0):
+    if(abs(y1) < 0.005):
         xpts = [0,x1];
         ypts = [0,y1];
     else:

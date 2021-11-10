@@ -1378,7 +1378,8 @@ def registerDevicesInModule(module_name: str):
                 oj = obj()
                 oj.initialize()
                 _DeviceList[oj._name] = obj
-                print("found",oj._name)
+                print("Loaded",oj._name,":",oj._description)
+
 
 def CreateDeviceLibrary(devname: str, params: dict, filename: str):
     """
