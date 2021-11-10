@@ -61,6 +61,8 @@ class Crystal:
         """
         self.xpts = xpts
         self.ypts = ypts
+        if(type(params)==np.ndarray):
+            params=np.float64(params)
         self.params = params
         
     def remove_at_index(self, index: List[int]):
@@ -135,6 +137,7 @@ class Crystal:
         """
         if len(index)>0:
             self.params[pindex,index]=pvalues
+
     
     def coord_to_index(self,xc,yc):
         """
