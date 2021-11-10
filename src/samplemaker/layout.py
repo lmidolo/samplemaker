@@ -382,7 +382,7 @@ class DeviceTable:
         None.
 
         """
-        self.dev = dev # A prebuilt device with preset parameters
+        self.dev = deepcopy(dev) # A prebuilt device with preset parameters
         self.nrow = nrow
         self.ncol = ncol
         self.rowvars = rowvars
@@ -832,8 +832,8 @@ class Mask:
         # We might, however, need to re-compute the bounding boxes
         # for example in table autoalignment. Thus we replace the reference
         # groups with theyr bboxes
-        for key,val in LayoutPool.items():
-            val.keep_refs_only()
+        #for key,val in LayoutPool.items():
+        #    val.keep_refs_only()
                 
             
         data = (LayoutPool,_DeviceCountPool,_DeviceLocalParamPool,_DevicePool,_BoundingBoxPool)
