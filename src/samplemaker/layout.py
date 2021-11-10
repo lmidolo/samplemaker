@@ -398,6 +398,8 @@ class DeviceTable:
         self._external_ports = dict() # Stores the output ports 
         self._geometries=[]
         self._portmap=[]
+        self._backup_dev = deepcopy(dev) # Keep it to reset the whole thing
+        self._getgeom_ran = False
             
     def set_table_positions(self, positions: tuple):
         """
@@ -616,8 +618,14 @@ class DeviceTable:
             The rendered table geometry
 
         """
+        if(self._getgeom_ran):
+            self._geometries = []
+            self._portmap = []
+            self.dev = deepcopy(self._backup_dev)
+        
         if(self._geometries==[]):
             self.__build_geomarray()
+        
         self.__place_portmap()
         g = GeomGroup()
         dev = self.dev
@@ -677,6 +685,7 @@ class DeviceTable:
                     p1 = deepcopy(pp)
                     p1.name+="_%i_%i"%(j,i)
                     self._external_ports[p1.name]=p1
+        self._getgeom_ran = True
         return g
    
     @staticmethod
