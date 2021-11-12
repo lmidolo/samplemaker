@@ -485,7 +485,7 @@ def make_rounded_rect(x0: float,y0: float,width: float,
     if(numkey!=5):
         xoff = -((numkey-1)%3-1)
         yoff = math.floor((9-numkey)/3)-1
-        r1.translate(xoff*width/2,yoff*height/2)
+        r1.translate(xoff*(width+2*corner_radius)/2,yoff*(height+2*corner_radius)/2)
     r1.poly_resize(corner_radius, layer, corner_radius>0, resolution*4)
     return r1
 
