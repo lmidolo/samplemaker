@@ -909,7 +909,7 @@ class Poly:
         # Note: only for polygon class, we store the points in GDS format,
         # already scaled to nanometers and as X0,Y0,X1,Y1,X2,Y2...
         # rdata = np.round_((np.array([xpts,ypts])*1000)).astype(int)
-        rdata = np.array([xpts,ypts])
+        rdata = np.array([xpts,ypts],dtype="float64")
         self.data = np.transpose(rdata).reshape(-1)
         self.data = np.append(self.data,self.data[0:2])
         self.Npts = math.floor(self.data.size/2)

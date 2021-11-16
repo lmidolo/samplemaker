@@ -194,7 +194,7 @@ def __connect_step(port1: "DevicePort",port2: "DevicePort",
     p1.fix()
     p1.BL(rad)
     dL = p1.dist(port2)
-    res = __connectable_bend(p1,port2)
+    res = __connectable_bend(p1,port2,rad)
     if(res[0]):
         seq += [["B",90,rad]]+res[1]
         return True,seq    
@@ -202,7 +202,7 @@ def __connect_step(port1: "DevicePort",port2: "DevicePort",
     p1.reset()
     p1.BR(rad)
     dR = p1.dist(port2)
-    res = __connectable_bend(p1,port2)
+    res = __connectable_bend(p1,port2,rad)
     if(res[0]):
         seq += [["B",-90,rad]]+res[1]
         return True,seq
@@ -254,11 +254,11 @@ def WaveguideConnect(port1: "DevicePort",port2: "DevicePort",
 
     """
     # Trivial cases first
-    res = __connectable_facing(port1, port2)
+    res = __connectable_facing(port1, port2,rad)
     if(res[0]):
         #print("connectable facing")
         return True,res[1]
-    res = __connectable_bend(port1,port2);
+    res = __connectable_bend(port1,port2,rad);
     if(res[0]):
         #print("connectable")
         return True,res[1]
@@ -266,7 +266,7 @@ def WaveguideConnect(port1: "DevicePort",port2: "DevicePort",
         p1 = deepcopy(port1)
         seq = []
         for i in range(4):
-            res = __connect_step(p1, port2)
+            res = __connect_step(p1, port2,rad)
             seq += res[1]
             if(res[0]): break
         if(i<4):
