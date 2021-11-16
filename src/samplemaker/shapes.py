@@ -205,11 +205,12 @@ class GeomGroup:
 
         Returns
         -------
-        None.
+        Reference to the the object.
 
         """
         for geom in self.group:
             geom.translate(dx,dy)
+        return self
     
     def rotate_translate(self, dx: float, dy: float, rot: float):
         """
@@ -228,11 +229,12 @@ class GeomGroup:
 
         Returns
         -------
-        None.
+        Reference to the the object.
 
         """
         for geom in self.group:
             geom.rotate_translate(dx,dy,rot)
+        return self
     
     def rotate(self,x0: float,y0: float,rot: float):
         """
@@ -249,11 +251,12 @@ class GeomGroup:
 
         Returns
         -------
-        None.
+        Reference to the the object.
 
         """
         for geom in self.group:
             geom.rotate(x0,y0,rot)
+        return self
     
     def scale(self,x0: float,y0: float,scale_x: float,scale_y: float):
         """
@@ -272,11 +275,12 @@ class GeomGroup:
 
         Returns
         -------
-        None.
+        Reference to the the object.
 
         """
         for geom in self.group:
             geom.scale(x0,y0,scale_x,scale_y)
+        return self
     
     def mirrorX(self,x0: float):
         """
@@ -289,12 +293,13 @@ class GeomGroup:
 
         Returns
         -------
-        None.
+        Reference to the the object.
 
         """
         for geom in self.group:
             geom.mirrorX(x0)
-    
+        return self
+
     def mirrorY(self,y0: float):
         """
         Mirrors the geometry around y-axis
@@ -306,11 +311,12 @@ class GeomGroup:
 
         Returns
         -------
-        None.
+        Reference to the the object.
 
         """
         for geom in self.group:
             geom.mirrorY(y0)
+        return self
             
     def bounding_box(self) -> 'Box':
         """
@@ -341,11 +347,13 @@ class GeomGroup:
 
         Returns
         -------
-        None.
+        Reference to the the object.
 
         """
         for geom in self.group:
             geom.layer=layer
+        return self
+            
     
     def select_layer(self,layer: int) -> 'GeomGroup':
         """
@@ -509,7 +517,7 @@ class GeomGroup:
 
         Returns
         -------
-        None.
+        Reference to the the object.
 
         """
         # Get the boost python data
@@ -519,6 +527,7 @@ class GeomGroup:
         pg0.assign()
         # Put back the boost python data 
         self.__set_boopy__(pg0, layer)
+        return self
 
     def boolean_difference(self, targetB: "GeomGroup", layerA: int, layerB: int):
         """
@@ -538,7 +547,7 @@ class GeomGroup:
 
         Returns
         -------
-        None.
+        Reference to the the object.
 
         """
         # Get the boost python data
@@ -550,6 +559,7 @@ class GeomGroup:
         self.group[:] = [g for g in self.group if not (type(g)==Poly and g.layer==layerA)]
         # Put back the boost python data (merge is automatically done)
         self.__set_boopy__(pgA, layerA)
+        return self
         
     def boolean_xor(self, targetB: "GeomGroup", layerA: int, layerB: int):
         """
@@ -569,7 +579,7 @@ class GeomGroup:
 
         Returns
         -------
-        None.
+        Reference to the the object.
 
         """
         # Get the boost python data
@@ -581,6 +591,7 @@ class GeomGroup:
         self.group[:] = [g for g in self.group if not (type(g)==Poly and g.layer==layerA)]
         # Put back the boost python data (merge is automatically done)
         self.__set_boopy__(pgA, layerA)
+        return self
         
     def boolean_intersection(self, targetB: "GeomGroup", layerA: int, layerB: int):
         """
@@ -600,7 +611,7 @@ class GeomGroup:
 
         Returns
         -------
-        None.
+        Reference to the the object.
 
         """
         # Get the boost python data
@@ -612,6 +623,7 @@ class GeomGroup:
         self.group[:] = [g for g in self.group if not (type(g)==Poly and g.layer==layerA)]
         # Put back the boost python data (merge is automatically done)
         self.__set_boopy__(pgA, layerA)
+        return self
         
     def poly_resize(self, offset: float, layer: int, corner_fill_arc: bool = False, num_circle_segments: int = 0):
         """
@@ -631,13 +643,14 @@ class GeomGroup:
 
         Returns
         -------
-        None.
+        Reference to the the object.
 
         """
         pg0 = self.__get_boopy__(layer)
         pg0.resize(round(offset*1000),corner_fill_arc, num_circle_segments)
         self.group[:] = [g for g in self.group if not (type(g)==Poly and g.layer==layer)]
         self.__set_boopy__(pg0, layer)
+        return self
         
     def poly_anisotropic_resize(self, angles: list, deltas: list, layer: int):
         """
@@ -656,12 +669,13 @@ class GeomGroup:
 
         Returns
         -------
-        None.
+        Reference to the the object.
 
         """
         for i in range(len(self.group)):
             if(type(self.group[i])==Poly and self.group[i].layer==layer):
                 self.group[i].anisotropic_resize(angles,deltas)
+        return self
     
     def poly_outlining(self, offset: float, layer: int, corner_fill_arc: bool = False, num_circle_segments: int = 0):
         """
@@ -680,7 +694,7 @@ class GeomGroup:
 
         Returns
         -------
-        None.
+        Reference to the the object.
 
         """
         pg0 = self.__get_boopy__(layer)
@@ -693,6 +707,7 @@ class GeomGroup:
         else:
             pgorig.difference(pg0)
             self.__set_boopy__(pgorig,layer)
+        return self
         
     def trapezoids(self,layer: int):
         """
@@ -705,13 +720,14 @@ class GeomGroup:
 
         Returns
         -------
-        None.
+        Reference to the the object.
 
         """
         pg0 = self.__get_boopy__(layer)
         pg0.trapezoids()
         self.group[:] = [g for g in self.group if not (type(g)==Poly and g.layer==layer)]
         self.__set_boopy__(pg0, layer)
+        return self
 
 class Dot:
     def __init__(self,x,y):
