@@ -24,7 +24,7 @@ from typing import (  # noqa: F401
     Optional, Set, Tuple, Type, TypeVar, Union,
 )
 
-__version__ = "5.2.0"
+__version__ = "5.2.1"
     
 __pdoc__: Dict[str, Union[bool, str]] = {}
 __pdoc__["samplemaker.Tutorials"]=False

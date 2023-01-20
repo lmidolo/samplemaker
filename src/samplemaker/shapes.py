@@ -1200,15 +1200,19 @@ class Text:
     def rotate_translate(self, dx,dy,rot):
         cost = math.cos(rot/180*math.pi)
         sint = math.sin(rot/180*math.pi)
-        self.x0 = cost*(self.x0)-sint*(self.y0)+dx
-        self.y0 = sint*(self.x0)+cost*(self.y0)+dy
+        xv = self.x0;
+        yv = self.y0;
+        self.x0 = cost*xv-sint*yv+dx
+        self.y0 = sint*xv+cost*yv+dy
         self.angle += rot
     
     def rotate(self,xc,yc,rot):
         cost = math.cos(rot/180*math.pi)
         sint = math.sin(rot/180*math.pi)
-        self.x0 = cost*(self.x0-xc)-sint*(self.y0-yc)+xc
-        self.y0 = sint*(self.x0-xc)+cost*(self.y0-yc)+yc
+        xv = self.x0-xc;
+        yv = self.y0-yc;
+        self.x0 = cost*xv-sint*yv+xc
+        self.y0 = sint*xv+cost*yv+yc
         self.angle += rot
         
     def scale(self,xc,yc,scale_x,scale_y):
@@ -1271,19 +1275,25 @@ class RefBase:
         self.x0+=dx
         self.y0+=dy
         
-    def rotate_translate(self,xc,yc,rot):
+    def rotate_translate(self,dx,dy,rot):
         cost = math.cos(rot/180*math.pi)
         sint = math.sin(rot/180*math.pi)
-        self.x0 = cost*(self.x0)-sint*(self.y0)+xc
-        self.y0 = sint*(self.x0)+cost*(self.y0)+yc
+        xv = self.x0;
+        yv = self.y0;
+        self.x0 = cost*xv-sint*yv+dx
+        self.y0 = sint*xv+cost*yv+dy
         self.angle += rot
+        self.angle = self.angle%360
         
     def rotate(self,xc,yc,rot):
         cost = math.cos(rot/180*math.pi)
         sint = math.sin(rot/180*math.pi)
-        self.x0 = cost*(self.x0-xc)-sint*(self.y0-yc)+xc
-        self.y0 = sint*(self.x0-xc)+cost*(self.y0-yc)+yc
+        xv = self.x0-xc;
+        yv = self.y0-yc;
+        self.x0 = cost*xv-sint*yv+xc
+        self.y0 = sint*xv+cost*yv+yc
         self.angle += rot
+        self.angle = self.angle%360
         
     def scale(self,xc,yc,scale_x,scale_y):
         self.x0 = scale_x*(self.x0-xc)+xc
@@ -1292,11 +1302,14 @@ class RefBase:
         
     def mirrorX(self,xc):
         self.x0 = 2*xc-self.x0
-        self.angle=-self.angle        
+        self.mirror=not self.mirror
+        self.angle=180-self.angle
+        self.angle = self.angle%360
 
     def mirrorY(self,yc):
         self.y0 = 2*yc-self.y0
-        self.mirror = 1-self.mirror
+        self.mirror = not self.mirror
+        self.angle = -self.angle
                 
 class SRef(RefBase):
     def __init__(self,x0,y0,cellname,group,mag,angle,mirror):
