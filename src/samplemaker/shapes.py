@@ -1335,12 +1335,12 @@ class SRef(RefBase):
         if(self.mag != 1):
             flat_group.scale(0,0,self.mag,self.mag)
         # roto-translate
+        if(self.mirror):
+            flat_group.mirrorY(0)
         if(self.angle != 0):
             flat_group.rotate_translate(self.x0,self.y0,self.angle)
         else:
             flat_group.translate(self.x0,self.y0)
-        if(self.mirror):
-            flat_group.mirrorY(self.y0)
         return flat_group
 
 class ARef(SRef):
