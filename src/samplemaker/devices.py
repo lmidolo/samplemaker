@@ -766,7 +766,7 @@ class Device:
         device.parameters()
         device.ports()
         return device
-
+   
 
 class NetListEntry:
     def __init__(self,devname: str, x0: float, y0: float, rot: str, 
@@ -832,6 +832,7 @@ class NetList:
         self.entry_list = entry_list
         self.external_ports = []
         self.aligned_ports = []
+        self.paths = dict()
     
     def __hash__(self):
         return hash((self.name,tuple(self.entry_list),tuple(self.external_ports),
@@ -871,6 +872,24 @@ class NetList:
         """
         self.aligned_ports = aligned_ports
         
+    def set_path(self, port_name: str, coords: list):
+        """
+        Define a specific path that a wire should follow. 
+
+        Parameters
+        ----------
+        port_name : str
+            The name of the wire.
+        coords : list
+            list of coordinates, x1, y1, x2, y2... that the wire should follow.
+
+        Returns
+        -------
+        None.
+
+        """
+        self.paths[port_name]=coords
+        
     @classmethod
     def ImportCircuit(cls, file_name: str, circuit_name: str = ""):
         """
@@ -900,6 +919,7 @@ class NetList:
             current_netlist = ""
             current_entrylist = []
             current_align = []
+            current_path = dict()
             all_lists = dict(); # stores all the imported netlists
             for line in f:
                 tokens = line.split()
@@ -914,13 +934,37 @@ class NetList:
                 if(tokens[0]==".ALIGN" and current_netlist != ""):
                     current_align = tokens[1:]
                     continue
+                if(tokens[0]==".PATH" and current_netlist != ""):
+                    # expect 4 tokens minimum
+                    wirename=tokens[1]
+                    pathlist = []
+                    if(len(tokens[2:])%3)>0:
+                        print("Warning: wrong number of values specified for .PATH command")
+                    else:
+                        for i in range(0,len(tokens[2:]),3):
+                            pathlist+=[float(tokens[2+i])] # X
+                            pathlist+=[float(tokens[3+i])] # Y
+                            angle = tokens[4+i] # angle
+                            if(angle=="N"):
+                                pathlist+=[90]
+                            if(angle=="E"):
+                                pathlist+=[0]
+                            if(angle=="W"):
+                                pathlist+=[180]
+                            if(angle=="S"):
+                                pathlist+=[270]
+                            
+                    current_path[wirename]=pathlist
+                    continue
                 if(tokens[0]==".END" and current_netlist != ""):
                     clist = cls(current_netlist[0],deepcopy(current_entrylist))
                     clist.aligned_ports=current_align;
                     clist.external_ports=current_netlist[1:]
+                    clist.paths=deepcopy(current_path)
                     current_entrylist = []
                     current_netlist = ""
                     current_align = []
+                    current_path.clear()
                     all_lists[clist.name]=clist
                     continue
                 # Now we should have only entries
@@ -1046,6 +1090,8 @@ class Circuit(Device):
         netlist = self._p["NETLIST"].entry_list
         external_ports = self._p["NETLIST"].external_ports
         aligned_ports = self._p["NETLIST"].aligned_ports
+        paths = self._p["NETLIST"].paths
+
         input_ports = dict()
         output_ports = dict()
         # Instantiate all devices
@@ -1105,7 +1151,26 @@ class Circuit(Device):
             if portname in output_ports:
                 port2 = output_ports[portname]
                 if(port1.connector_function == port2.connector_function):
-                    g+=port1.connector_function(port1,port2)
+                    if portname in paths:
+                        # Force connector between virtual points
+                        pts = paths[portname]
+                        if(len(pts)%3 > 0):
+                            print("Warning, specified path for wire",portname,"should include 3 values for each point (x,y,angle)")
+                        else:
+                            portx = deepcopy(port1)
+                            for i in range(0,len(pts),3):
+                                print("Connecting",pts[i],pts[i+1])
+                                portx.x0 = pts[i]
+                                portx.y0 = pts[i+1]
+                                portx.set_angle(math.radians(pts[i+2]))
+                                portx.bf = not portx.bf
+                                g+=port1.connector_function(port1,portx)
+                                portx.bf = not portx.bf
+                                port1=deepcopy(portx)
+                                
+                            g+=portx.connector_function(portx,port2)
+                    else:
+                        g+=port1.connector_function(port1,port2)
                 else:
                     print("Warning, incompatible ports for connection named",portname)
             else:
