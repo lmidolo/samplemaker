@@ -566,13 +566,14 @@ class Device:
         """
         if cast_types:
             for p,val in self._p.items():
-                val=self._ptype[p](val)
+                self._p[p]=self._ptype[p](val)
         if clip_in_range:
             for p,val in self._p.items():
                 if val<self._prange[p][0]:
                     val = self._prange[p][0]
                 if val>self._prange[p][1]:
                     val = self._prange[p][1]
+                self._p[p]=val
         return self._p
 
     def get_port(self,port_name: str):
