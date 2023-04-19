@@ -1528,7 +1528,7 @@ class Arc(Ring):
 # Load fonts and store the glyphs
 # Maybe we should place this somewhere else
 caps=dict()
-with open(resource_filename('samplemaker.resources','sm_stencil_font.txt')) as f: 
+with open(resource_filename('samplemaker.resources','sm_stencil_font.txt'),encoding="ISO-8859-1") as f: 
     c = 'a';
     for line in f: 
         test = line.rstrip('\n').split(' ')
