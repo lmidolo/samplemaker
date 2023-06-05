@@ -94,7 +94,7 @@ class GDSWriter:
                         6,0x1602,0,6,0x1701,text.posu+text.posv*4+16,
                         8,0x0F03]);
         self.fid.write(struct.pack(">%sH" % buf.size,*buf))
-        self.fid.write(struct.pack(">i",math.floor(text.height*1000)))
+        self.fid.write(struct.pack(">i",math.floor(text.width*1000)))
         self.fid.write(struct.pack(">2H",12,0x1003))
         self.fid.write(struct.pack(">2i",
                                    math.floor(text.x0*1000),

@@ -90,7 +90,7 @@ This is done via the `DeviceTableAnnotations` class.
 """
 
 from samplemaker.makers import make_aref, make_path, make_circle, make_text
-from samplemaker.shapes import GeomGroup, Box
+from samplemaker.shapes import GeomGroup, Box, SRef, ARef
 from samplemaker.gdswriter import GDSWriter
 from samplemaker.gdsreader import GDSReader
 from samplemaker.devices import Device
@@ -724,7 +724,7 @@ class DeviceTable:
     
 
 class Mask:
-    def __init__(self, name: str):
+    def __init__(self, name: str = "layout001"):
         """
         Initialize a Mask class. The name given is used as base name for file export.
 
@@ -921,6 +921,56 @@ class Mask:
             gdsw.write_pool(LayoutPool)
         gdsw.close_library()
         if(self.cache): self.__exportCache()
+    
+    def importGDS(self, filename: str):
+        """
+        Import the full mask from GDS file.
+
+        Parameters
+        ----------
+        filename : str
+            name of the GDS file to read from.
+
+        Returns
+        -------
+        None.
+
+        """
+        
+        self.clear()
+        
+        reflist = set()
+        mainsymbolcandidates = set()
+
+        gdsr = GDSReader()
+        gdsr.quick_read(filename)
+        for cname in gdsr.celldata:
+            gg = gdsr.get_cell(cname)
+            self.addCell(cname, gg)
+            reflist = gg.get_sref_list(reflist)
+        for cname in gdsr.celldata:
+            if(cname not in reflist):
+                mainsymbolcandidates.add(cname)
+        if len(mainsymbolcandidates)==1:
+            self.mainsymbol=[i for i in mainsymbolcandidates][0]
+        else:
+            nsubref = 0
+            for cname in mainsymbolcandidates:
+                nrefs = len(LayoutPool[cname].get_sref_list())
+                if(nrefs>nsubref): 
+                    nsubref=nrefs
+                    self.mainsymbol=cname
+        # Update references after reading
+        for cname in gdsr.celldata:
+            for e in LayoutPool[cname].group:
+                if(type(e)==SRef or type(e)==ARef):
+                    print("SREF/AREF link",e.cellname)
+                    e.group = LayoutPool[e.cellname]
+        
+
+        
+        
+        
     
     def addMarkers(self, markerset: "MarkerSet"):
         """

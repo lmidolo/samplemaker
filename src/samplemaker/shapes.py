@@ -937,6 +937,10 @@ class Poly:
     def int_data(self):
         return np.round_(self.data*1000).astype(int)
     
+    def set_int_data(self, idata):
+        self.data = idata.astype("float64")/1000;
+        self.Npts = self.data.size/2
+    
     def __init__(self,xpts,ypts,layer):
         self.layer = layer
         self.set_points(xpts,ypts)
