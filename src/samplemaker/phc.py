@@ -352,8 +352,8 @@ class Crystal:
             x1=np.append(x1,xchunk1)
             x2=np.append(x2,xchunk2)
   
-        x1=np.append(x1,startx+np.array([e for e in range(0,np.int(Nx-totalp+1))]));
-        x2=np.append(x2,startx+(0.5 + np.array([e for e in range(0,np.int(Nx-totalp))])))
+        x1=np.append(x1,startx+np.array([e for e in range(0,int(Nx-totalp+1))]));
+        x2=np.append(x2,startx+(0.5 + np.array([e for e in range(0,int(Nx-totalp))])))
         x1=np.append(x1,-x1[::-1])
         x2=np.append(x2,-x2[::-1])
         x1=np.sort(np.unique(x1))
