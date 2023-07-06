@@ -442,11 +442,55 @@ class GeomGroup:
         return g
         
     def select(self, query_str: str)-> 'GeomGroup':
+        """
+        Performs a selection of the shapes (filtering) based on geometrical 
+        properties. The output GeomGroup contains only the elements that satisfy
+        the conditions expressed in the query string.
+        For example, to select only polygons with area smaller than 1, do
+        sel = geom.select("A<=1").
+        The geometry is flattened prior to selection if sub-references are encountered.
+        The following properties can be used
+            "A": Area
+            "P": Perimeter
+            "W": Bounding box width
+            "H": Bounding box height
+            "L": Layer
+            "T": type (can be Poly, Path, Text, Circle, Ellipse, Ring, Arc)
+            "x": centroid x coordinate
+            "y": centroid y coordinate
+            "llx": lower-left x coordinate of the bounding box
+            "lly": lower-left y coordinate of the bounding box
+            "urx": upper-right x coordinate of the bounding box
+            "ury": upper-right y coordinate of the bounding box
+        Any Python logical expression can be used including mathematical operations between 
+        variables, for example the shape index lower than 0.2 can be queried as follows
+        sel = geom.select("12.566*A/P**2<=0.2").
+        
+        Boolean operation should be expressed using parenthesis and bitwise operator &,^,|,!
+        for example
+        sel = geom.select("(x<1) & (y>5)").
+        
+
+        Parameters
+        ----------
+        query_str : str
+            A string defining the selection condition.
+
+        Raises
+        ------
+        NameError
+            If variable names are not recognized.
+
+        Returns
+        -------
+        'GeomGroup'
+            A geometry group containing the elments that satisfy the criteria.
+
+        """
         allowed_names = {'A': "Polygon area",
                          'P': "Polygon perimeter",
                          'W': "Bounding box width",
                          'H': "Bounding box height",
-                         'R': "Radius, if circle",
                          'L': "Layer",
                          'T': "Type",
                          'x': "X position, center or reference pos",
@@ -456,13 +500,59 @@ class GeomGroup:
                          'urx': "upper right x position of the bb",
                          'ury': "upper right y position of the bb"}
         code = compile(query_str,"<string>","eval")
+        sflat = self
+        if(len(self.get_sref_list())!=0):
+           sflat=self.flatten()
+        # Pre-allocate Bounding boxes
+        bbs = [g.bounding_box() for g in sflat.group]
         for name in code.co_names:
             if(name not in allowed_names):
                 raise NameError(f"Use of expression {name} not allowed")
         
             # Prepare the local variable dictionary
             
-    def get_area(self):
+            if name=="A": # Prepare area array
+                allowed_names[name]=np.array([g.area() for g in sflat.group])
+            if name=="P": # Prepare area array
+                allowed_names[name]=np.array([g.perimeter() for g in sflat.group])
+            if name=="L": # Prepare layer array
+                allowed_names[name]=np.array([g.layer for g in sflat.group])
+            if name=="W": # Prepare width array
+                allowed_names[name]=np.array([b.width for b in bbs])
+            if name=="H": # Prepare height array
+                allowed_names[name]=np.array([b.height for b in bbs])
+            if name=="x" or name=="y": # Prepare centroid array
+                allowed_names["x"]=np.array([g.centroid()[0] for g in sflat.group])
+                allowed_names["y"]=np.array([g.centroid()[1] for g in sflat.group])
+            if name=="llx": # Prepare LL array
+                allowed_names["llx"]=np.array([b.llx for b in bbs])
+            if name=="lly": # Prepare LL array
+                allowed_names["lly"]=np.array([b.lly for b in bbs])
+            if name=="urx": # Prepare UR array
+                allowed_names["urx"]=np.array([b.urx() for b in bbs])
+            if name=="ury": # Prepare UR array
+                allowed_names["ury"]=np.array([b.ury() for b in bbs])            
+            if name=="T": # Prepare type array
+                allowed_names[name]=np.array([str(g.__class__.__name__) for g in sflat.group])
+            
+                
+        # Now execute
+        g = GeomGroup()
+        sel = eval(code, {"__builtins__": {}}, allowed_names)
+        g.group[:] = [sflat.group[i] for i,val in enumerate(sel) if val]
+        return g
+        
+            
+    def get_area(self)->float:
+        """
+        Calculates the total area of the group
+
+        Returns
+        -------
+        float
+            The total area of the group.
+
+        """
         area = 0
         for i in range(len(self.group)):
             if(type(self.group[i])==SRef or type(self.group[i])==ARef):
@@ -802,7 +892,10 @@ class GeomGroup:
 
         """
         pg0 = self.__get_boopy__(layer)
-        bb = self.select_layer(layer).bounding_box().toRect();
+        sel = self.select_layer(layer)
+        if len(sel.group)==0: 
+            return self
+        bb = sel.bounding_box().toRect();
         if(offset!=0):
             bb.poly_resize(offset, layer)
         bb.set_layer(layer)
@@ -1094,12 +1187,40 @@ class Poly:
         x = self.data[0::2]
         y = self.data[1::2]
         n = int(len(x))
-        j = n - 1
-        for i in range(0,n):
-            area += (x[j] + x[i]) * (y[j] - y[i])
-            j = i
-            
+        j = n-1
+        for i in range(n):
+            area += x[j]*y[i] - x[i]*y[j]
+            j=i
         return float(round(1e6*abs(area / 2.0)))/1.0e6
+    
+    def centroid(self):
+        cx=0;
+        cy=0;
+        area=0;        
+        x = self.data[0::2]
+        y = self.data[1::2]
+        n = int(len(x))
+        j = n-1
+        for i in range(n):
+            shl = x[j]*y[i] - x[i]*y[j]
+            area +=  shl
+            cx+=(x[j]+x[i])*shl
+            cy+=(y[j]+y[i])*shl
+            j=i
+        cx/=3*area
+        cy/=3*area
+        return cx,cy
+    
+    def perimeter(self):
+        p = 0;
+        x = self.data[0::2]
+        y = self.data[1::2]
+        n = int(len(x))
+        j = n-1
+        for i in range(n):
+            p+=np.sqrt((x[i]-x[j])**2+(y[i]-y[j])**2)
+            j=i
+        return p
     
     def to_polygon(self):
         g = GeomGroup()
@@ -1247,6 +1368,16 @@ class Path:
     def area(self):
         # Approximately the path length * width
         return self.path_length()*self.width
+    
+    def centroid(self):
+        # Give the average x,y
+        cx = np.array(self.xpts).mean()
+        cy = np.array(self.ypts).mean()
+        return cx,cy
+    
+    def perimeter(self):
+        # Approximately twice the length and twice width
+        return self.path_length()*2+self.width*2
         
     def to_polygon(self):
         x=self.xpts
@@ -1369,6 +1500,12 @@ class Text:
     def area(self):
         return 0
     
+    def centroid(self):
+        return self.x0,self.y0
+    
+    def perimeter(self):
+        return 0
+    
     def __to_path(self):
         offset =0;
         g = GeomGroup();
@@ -1446,6 +1583,9 @@ class RefBase:
         self.y0 = 2*yc-self.y0
         self.mirror = not self.mirror
         self.angle = -self.angle
+        
+    def centroid(self):
+        return self.x0,self.y0
                 
 class SRef(RefBase):
     def __init__(self,x0,y0,cellname,group,mag,angle,mirror):
@@ -1554,6 +1694,12 @@ class Circle:
     def area(self):
         return np.pi*self.r*self.r
     
+    def centroid(self):
+        return self.x0, self.y0
+    
+    def perimeter(self):
+        return 2*np.pi*self.r
+    
     def to_polygon(self,Npts=12):
         xc = np.array([0.]*Npts)
         yc = np.array([0.]*Npts)
@@ -1591,11 +1737,16 @@ class Ellipse(Circle):
         self.rot=-self.rot
     
     def bounding_box(self):
-        g = self.to_polygon(self,12)
+        g = self.to_polygon(12)
         return g.bounding_box()
     
     def area(self):
         return np.pi*self.r*self.r1
+    
+    def perimeter(self):
+        a = self.r
+        b = self.r1
+        return np.pi*(3*(a+b)-np.sqrt((3*a+b)*(a+3*b)))
     
     def to_polygon(self,Npts=32):
         xc = np.array([0.]*Npts)
@@ -1618,7 +1769,7 @@ class Ring(Ellipse):
         self.w*=scale_x
     
     def bounding_box(self):
-        g = self.to_polygon(self,12)
+        g = self.to_polygon(12)
         return g.bounding_box()
     
     def area(self):
@@ -1626,6 +1777,9 @@ class Ring(Ellipse):
         a2 = np.pi*(self.r-self.w/2)*(self.r1-self.w/2)
         return a1-a2
     
+    def perimeter(self):
+        g = self.to_polygon(12)
+        return g.group[0].perimeter()
         
     def to_polygon(self,Npts=32):
         xpts = np.array([0.]*(2+Npts*2))
@@ -1650,12 +1804,16 @@ class Arc(Ring):
         self.a2=a2
         
     def bounding_box(self):
-        g = self.to_polygon(self,12)
+        g = self.to_polygon(12)
         return g.bounding_box()
     
     def area(self):
         ra=Ring.area(self)
         return ra * (math.radians(self.a2)-math.radians(self.a1))/2/np.pi
+    
+    def centroid(self):
+        g = self.to_polygon(12)
+        return g.group[0].centroid()
     
     def to_polygon(self,Npts=32,autosplit=False):
         th = np.linspace(math.radians(self.a1),math.radians(self.a2),Npts)
