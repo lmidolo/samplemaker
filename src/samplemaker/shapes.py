@@ -441,6 +441,35 @@ class GeomGroup:
                 g.add(geom)
         return g
         
+    def select(self, query_str: str)-> 'GeomGroup':
+        allowed_names = {'A': "Polygon area",
+                         'P': "Polygon perimeter",
+                         'W': "Bounding box width",
+                         'H': "Bounding box height",
+                         'R': "Radius, if circle",
+                         'L': "Layer",
+                         'T': "Type",
+                         'x': "X position, center or reference pos",
+                         'y': "Y position, center or reference pos",
+                         'llx': "lower left x position of the bb",
+                         'lly': "lower left y position of the bb",
+                         'urx': "upper right x position of the bb",
+                         'ury': "upper right y position of the bb"}
+        code = compile(query_str,"<string>","eval")
+        for name in code.co_names:
+            if(name not in allowed_names):
+                raise NameError(f"Use of expression {name} not allowed")
+        
+            # Prepare the local variable dictionary
+            
+    def get_area(self):
+        area = 0
+        for i in range(len(self.group)):
+            if(type(self.group[i])==SRef or type(self.group[i])==ARef):
+                area+=self.group[i].group.get_area(); 
+            else:
+                area+=self.group[i].area()
+        return float(round(area*1e6))/1e6
     
     def path_to_poly(self):
         """
@@ -491,8 +520,8 @@ class GeomGroup:
                 polys+=self.group[i].to_polygon()                
 
         self.group[:] = [g for g in self.group if type(g)==SRef or type(g)==ARef]
-        self.group = self.group+polys.group
-        
+        self.group = self.group+polys.group    
+    
     def in_polygons(self, x: float,y:float) -> bool:
         """
         Checks if a given coordinate is inside the GeomGroup polygons. 
@@ -1059,7 +1088,19 @@ class Poly:
         lly = min(self.data[1::2])
         ury = max(self.data[1::2])
         return Box(llx,lly,urx-llx,ury-lly)
-        
+    
+    def area(self):
+        area = 0.0;
+        x = self.data[0::2]
+        y = self.data[1::2]
+        n = int(len(x))
+        j = n - 1
+        for i in range(0,n):
+            area += (x[j] + x[i]) * (y[j] - y[i])
+            j = i
+            
+        return float(round(1e6*abs(area / 2.0)))/1.0e6
+    
     def to_polygon(self):
         g = GeomGroup()
         g.add(self)
@@ -1194,7 +1235,19 @@ class Path:
         lly = min(self.ypts)
         ury = max(self.ypts)
         return Box(llx,lly,urx-llx,ury-lly)
-            
+
+    def path_length(self):
+        x=self.xpts
+        y=self.ypts
+        plen = 0.0
+        for i in range(1,self.Npts):
+            plen+=np.sqrt((x[i]-x[i-1])**2 + (y[i]-y[i-1])**2)
+        return plen
+        
+    def area(self):
+        # Approximately the path length * width
+        return self.path_length()*self.width
+        
     def to_polygon(self):
         x=self.xpts
         y=self.ypts
@@ -1312,7 +1365,10 @@ class Text:
     def bounding_box(self):
         # Note this cannot be properly estimated
         return Box(self.x0,self.y0,0,0)
-        
+
+    def area(self):
+        return 0
+    
     def __to_path(self):
         offset =0;
         g = GeomGroup();
@@ -1494,7 +1550,10 @@ class Circle:
         
     def bounding_box(self):
         return Box(self.x0-self.r,self.y0-self.r,2*self.r,2*self.r)
-        
+    
+    def area(self):
+        return np.pi*self.r*self.r
+    
     def to_polygon(self,Npts=12):
         xc = np.array([0.]*Npts)
         yc = np.array([0.]*Npts)
@@ -1535,6 +1594,9 @@ class Ellipse(Circle):
         g = self.to_polygon(self,12)
         return g.bounding_box()
     
+    def area(self):
+        return np.pi*self.r*self.r1
+    
     def to_polygon(self,Npts=32):
         xc = np.array([0.]*Npts)
         yc = np.array([0.]*Npts)
@@ -1558,6 +1620,12 @@ class Ring(Ellipse):
     def bounding_box(self):
         g = self.to_polygon(self,12)
         return g.bounding_box()
+    
+    def area(self):
+        a1 = np.pi*(self.r+self.w/2)*(self.r1+self.w/2)
+        a2 = np.pi*(self.r-self.w/2)*(self.r1-self.w/2)
+        return a1-a2
+    
         
     def to_polygon(self,Npts=32):
         xpts = np.array([0.]*(2+Npts*2))
@@ -1584,6 +1652,10 @@ class Arc(Ring):
     def bounding_box(self):
         g = self.to_polygon(self,12)
         return g.bounding_box()
+    
+    def area(self):
+        ra=Ring.area(self)
+        return ra * (math.radians(self.a2)-math.radians(self.a1))/2/np.pi
     
     def to_polygon(self,Npts=32,autosplit=False):
         th = np.linspace(math.radians(self.a1),math.radians(self.a2),Npts)
