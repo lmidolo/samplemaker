@@ -752,7 +752,39 @@ class GeomGroup:
             pgorig.difference(pg0)
             self.__set_boopy__(pgorig,layer)
         return self
+    
+    def invert(self, layer: int, offset: float = 0):      
+        """
+        Performs the inverse boolean operation (NOT) on a group.
+        Acts on the specified layer only. 
+        The result is the negative of the mask on the bounding box polygon.
+        An offset can be specified to bloat/shrink the bounding box before inversion.
+
+        Parameters
+        ----------
+        layer : int
+            The layer to be inverted.
+        offset : float, optional
+            Resizing amount (positive or negative) of the bounding box before inversion. The default is 0.
+
+        Returns
+        -------
+        reference to the inverted object.
+
+        """
+        pg0 = self.__get_boopy__(layer)
+        bb = self.select_layer(layer).bounding_box().toRect();
+        if(offset!=0):
+            bb.poly_resize(offset, layer)
+        bb.set_layer(layer)
+        pgm = bb.__get_boopy__(layer)
+        pgm.difference(pg0)
+        self.group[:] = [g for g in self.group if not (type(g)==Poly and g.layer==layer)]        
+        self.__set_boopy__(pgm, layer)
         
+        return self
+        
+       
     def trapezoids(self,layer: int):
         """
         Converts and fractures all polygons in a set of trapezoids.
