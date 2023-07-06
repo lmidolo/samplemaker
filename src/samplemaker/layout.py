@@ -833,6 +833,28 @@ class Mask:
         """
         LayoutPool[cellname] = geom_group
         
+    def getCell(self, cellname: str) -> GeomGroup:
+        """
+        Returns a reference to the GeomGroup correspondin to the cellname.
+        Note: if you modify the geometry, it will be also modified in the mask.
+
+        Parameters
+        ----------
+        cellname : str
+            The name of the cell.
+
+        Returns
+        -------
+        GeomGroup
+            Reference to the geometry group.
+
+        """
+        if cellname in LayoutPool:
+            return LayoutPool[cellname]
+        else:
+            print("Cell named", cellname,"does not exist")
+            return GeomGroup()
+        
     def __exportCache(self):
         print("Storing objects in cache file")
         cachefile=open(self.name+".cache","wb")
@@ -964,7 +986,6 @@ class Mask:
         for cname in gdsr.celldata:
             for e in LayoutPool[cname].group:
                 if(type(e)==SRef or type(e)==ARef):
-                    print("SREF/AREF link",e.cellname)
                     e.group = LayoutPool[e.cellname]
         
 

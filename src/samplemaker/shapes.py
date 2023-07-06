@@ -376,6 +376,27 @@ class GeomGroup:
                 g.add(geom)
         return g
     
+    def select_layers(self,layers: List[int]) -> 'GeomGroup':
+        """
+        Create a new GeomGroup containing only shapes in a list of layers.
+
+        Parameters
+        ----------
+        layers : List[int]
+            The selected layer list.
+
+        Returns
+        -------
+        g : GeomGroup
+            A new GeomGroup object with elements of the selected layer list.
+
+        """
+        g = GeomGroup()
+        for geom in self.group:
+            if(geom.layer in layers):
+                g.add(geom)
+        return g
+    
     def deselect_layers(self, layers: List[int])-> 'GeomGroup':
         """
         Create a new GeomGroup containing only shapes that are not in layer list

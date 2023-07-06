@@ -97,7 +97,6 @@ class GDSReader:
         
         while self.ptr<len(self.buf):
             (rtype,pos,hlen) = self.__read_rec_buf()
-            print(rtype)
             if(hlen == 0): 
                 break
             if(rtype==8): # BOUNDARY
