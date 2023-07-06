@@ -191,6 +191,29 @@ class GeomGroup:
                 sref_list=geom.group.get_sref_list(sref_list)
         return sref_list                
         
+    def get_layer_list(self, layer_list=set()) -> set:
+        """
+        Returns a unique set of int with the layers in the object (recursively)
+        Should be called by the user without arguments, when querying the layers
+
+        Parameters
+        ----------
+        layer_list : set, optional
+            A set of integers with layers. The default is empty set.
+
+        Returns
+        -------
+        layer_list: set
+            The complete layer list.
+
+        """
+        for geom in self.group:
+            if(type(geom)==SRef or type(geom)==ARef):
+                layer_list=geom.group.get_layer_list(layer_list)
+            else:
+                layer_list.add(geom.layer)
+        
+        return layer_list                
     
     def translate(self,dx: float,dy: float):
         """
