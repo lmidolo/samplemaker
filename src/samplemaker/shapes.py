@@ -340,7 +340,65 @@ class GeomGroup:
         for geom in self.group:
             geom.mirrorY(y0)
         return self
-            
+    
+    def __entity_count(self, recursive: bool = True, layer_wise: bool = False, layer:int = 0) -> dict:
+        cnt = dict()
+        lfgroup = self.group
+        if(layer_wise):
+            lfgroup = [g for g in self.group if g.layer==layer]        
+        cnt["NPoly"] = len([g for g in lfgroup if type(g)==Poly])
+        cnt["NPath"] = len([g for g in lfgroup if type(g)==Path])
+        cnt["NText"] = len([g for g in lfgroup if type(g)==Text])
+        cnt["NCircle"] = len([g for g in lfgroup if type(g)==Circle])
+        cnt["NEllipse"] = len([g for g in lfgroup if type(g)==Ellipse])
+        cnt["NRing"] = len([g for g in lfgroup if type(g)==Ring])
+        cnt["NArc"] = len([g for g in lfgroup if type(g)==Arc])
+        if not recursive:
+            cnt["NSRef"] = len([g for g in self.group if type(g)==SRef])
+            cnt["NARef"] = len([g for g in self.group if type(g)==ARef])
+        else:
+            for g in self.group:
+                if type(g)==SRef or type(g)==ARef:
+                    subcnt = g.group.__entity_count(recursive,layer_wise,layer)
+                    if type(g)==ARef:
+                        for e in subcnt.keys(): 
+                            subcnt[e]*=g.ncols*g.nrows
+                    for name in cnt:
+                        cnt[name]+=subcnt[name]
+        return cnt
+    
+    def __str__(self):
+        """
+        Display basic geometry information (size and layers)
+
+        Returns
+        -------
+        msg : str
+            A string with the basic information about the geometry.
+
+        """
+        bb = self.bounding_box()
+        w = float(round(bb.width*1e3))/1e3
+        h = float(round(bb.height*1e3))/1e3
+        msg = "GeomGroup ("+str(w)+" x "+str(h)+")\n"
+        msg+= "Layers: "+str(self.get_layer_list())+"\n"
+        return msg
+    
+    def info(self) -> dict:
+        stat = dict()
+        bb = self.bounding_box()
+        layer_list = self.get_layer_list()
+        stat["BoundingBox"]={"x":bb.cx(),"y":bb.cy(),"width":bb.width, "height":bb.height}
+        stat["LayerList"]=[l for l in layer_list]
+        for l in layer_list:
+            cnt = self.__entity_count(True, True, l)   
+            cnt = {k: v for k, v in cnt.items() if v != 0}
+            stat["Layer"+str(l)] = cnt
+        cnt = self.__entity_count(True)
+        cnt = {k: v for k, v in cnt.items() if v != 0}
+        stat["TotalCount"] = cnt
+        return stat
+    
     def bounding_box(self) -> 'Box':
         """
         Calculates the group bounding box
