@@ -612,6 +612,45 @@ class GeomGroup:
         self.group[:] = [g for g in self.group if type(g)==SRef or type(g)==ARef]
         self.group = self.group+polys.group    
     
+    def poly_to_circle(self, thresh: float = 0.95, vcount: int = 10, include_refs: bool = True):
+        """
+        Converts all polygons to circle, when they meet a circularity threshold and
+        a vertex count larger than the vcount parameter.
+        
+
+        Parameters
+        ----------
+        thresh : float, optional
+            Circularity threshold (1=perfect circle). The default is 0.95.
+        vcount : int, optional
+            Minimum number of vertices to perform the conversion. The default is 10.
+        include_refs : bool, optional
+            Perform recursive conversion to SRefs and ARefs. The default is True
+
+        Returns
+        -------
+        None.
+
+        """
+        polys = GeomGroup();
+        for i in range(len(self.group)):
+            if (type(self.group[i])==Poly):
+                convp = self.group[i].to_circle(thresh,vcount)
+                if(convp.group==[]):
+                    polys.group+=[self.group[i]]
+                else:
+                    polys+=convp
+                continue
+            if (type(self.group[i])==SRef or type(self.group[i])==ARef):                
+                if(include_refs):
+                    self.group[i].group.poly_to_circle(thresh,vcount)
+                continue
+            # None of the above, just keep
+            polys.group+=[self.group[i]]
+        
+        self.group[:] = [g for g in self.group if type(g)==SRef or type(g)==ARef]
+        self.group = self.group+polys.group    
+    
     def in_polygons(self, x: float,y:float) -> bool:
         """
         Checks if a given coordinate is inside the GeomGroup polygons. 
@@ -1226,6 +1265,25 @@ class Poly:
         g = GeomGroup()
         g.add(self)
         return g
+
+    def to_circle(self, thresh: float = 0.95, vcount: int = 10):
+        g = GeomGroup()
+        if(self.Npts<vcount): 
+            return g
+        # Attempt to perform a conversion, return empty group if failed
+        # Check circularity
+        xpts = self.data[0::2]
+        ypts = self.data[1::2]
+        cx,cy = self.centroid()
+        rpts = np.sqrt((xpts-cx)**2+(ypts-cy)**2)
+        r_avg = rpts.mean()
+        rmin = np.min(rpts)
+        rmax = np.max(rpts)
+        circularity = 1-(rmax-rmin)/r_avg;
+        if(circularity>=thresh):
+            g.add(Circle(cx,cy,r_avg,self.layer))
+        return g
+        
 
     def point_inside(self,x,y):
         c = False
