@@ -385,6 +385,16 @@ class GeomGroup:
         return msg
     
     def info(self) -> dict:
+        """
+        Generate useful statistics on the group (element count, size)
+        and return it in a dict. 
+
+        Returns
+        -------
+        dict
+            Contains information on the group geometry.
+
+        """
         stat = dict()
         bb = self.bounding_box()
         layer_list = self.get_layer_list()
@@ -653,7 +663,7 @@ class GeomGroup:
         self.group[:] = [g for g in self.group if not type(g)==Text]
         self.group = self.group+polys.group
 
-    def all_to_poly(self):
+    def all_to_poly(self, Npts_circ: int=12, Npts_arc: int=32, split_arc: bool =False ):
         """
         Converts all elements except for SRef and Aref to polygons
 
@@ -662,10 +672,26 @@ class GeomGroup:
         None.
 
         """
+        
         polys = GeomGroup();
         for i in range(len(self.group)):
-            if((type(self.group[i])!=SRef) and (type(self.group[i])!=ARef)): 
+            g = self.group[i]
+            if(type(g)==Poly):
+                polys+=self.group[i].to_polygon()
+            if(type(g)==Text):
+                polys+=self.group[i].to_polygon()
+            if(type(g)==Path):
                 polys+=self.group[i].to_polygon()                
+            if(type(g)==Circle):
+                polys+=self.group[i].to_polygon(Npts_circ)
+            if(type(g)==Ellipse):
+                polys+=self.group[i].to_polygon(Npts_arc)
+            if(type(g)==Ring):
+                polys+=self.group[i].to_polygon(Npts_arc)
+            if(type(g)==Arc):
+                polys+=self.group[i].to_polygon(Npts_arc,split_arc)
+                    
+                    
 
         self.group[:] = [g for g in self.group if type(g)==SRef or type(g)==ARef]
         self.group = self.group+polys.group    
@@ -937,9 +963,10 @@ class GeomGroup:
                 self.group[i].anisotropic_resize(angles,deltas)
         return self
     
-    def poly_outlining(self, offset: float, layer: int, corner_fill_arc: bool = False, num_circle_segments: int = 0):
+    def poly_outlining(self, offset: float, layer: int, distance: float = 0, corner_fill_arc: bool = False, num_circle_segments: int = 0):
         """
         Calculates the polygon outline by resizing and subtracting the original geometry.
+        Also works on circles (ignores the other elements, which must be converted to poly first)
 
         Parameters
         ----------
@@ -947,6 +974,9 @@ class GeomGroup:
             Positive or negative offset (resizing) amount.
         layer : int
             The layer to be resized.
+        distance: float, optional
+            How far should the outline be displaced from the polygon edge. 
+            Negative values mean inward distance. The default is 0.
         corner_fill_arc : bool, optional
             Rounds the convex corners. The default is False.
         num_circle_segments : int, optional
@@ -959,7 +989,11 @@ class GeomGroup:
         """
         pg0 = self.__get_boopy__(layer)
         pgorig = self.__get_boopy__(layer)
-        pg0.resize(round(offset*1000),corner_fill_arc, num_circle_segments)
+        if(distance != 0):
+            pg0.resize(round((offset+distance)*1000),corner_fill_arc, num_circle_segments)
+            pgorig.resize(round(distance*1000),corner_fill_arc,num_circle_segments)
+        else:
+            pg0.resize(round(offset*1000),corner_fill_arc, num_circle_segments)
         self.group[:] = [g for g in self.group if not (type(g)==Poly and g.layer==layer)]
         if(offset>0):
             pg0.difference(pgorig)
@@ -967,6 +1001,13 @@ class GeomGroup:
         else:
             pgorig.difference(pg0)
             self.__set_boopy__(pgorig,layer)
+            
+        #Circles
+        for i in range(len(self.group)):
+            if type(self.group[i])==Circle:
+                g = self.group[i]
+                self.group[i] = Arc(g.x0,g.y0,g.r+offset/2+distance,g.r+offset/2+distance,g.layer,0,offset,0,360)            
+                
         return self
     
     def invert(self, layer: int, offset: float = 0):      
@@ -1932,6 +1973,7 @@ class Arc(Ring):
         return g.group[0].centroid()
     
     def to_polygon(self,Npts=32,autosplit=False):
+        Npts+=1
         th = np.linspace(math.radians(self.a1),math.radians(self.a2),Npts)
         xpts1 = np.cos(th)*(self.r+self.w/2)+self.x0
         ypts1 = np.sin(th)*(self.r1+self.w/2)+self.y0
@@ -1989,4 +2031,3 @@ for i in caps:
     _glyphs[i]=(gl,x)
     
 del caps
-                
