@@ -157,7 +157,7 @@ class GDSWriter:
         for geom in gg.group:
             geomtype = type(geom);
             if(geomtype==smsh.Poly):
-                if(geom.Npts>16000):
+                if(geom.Npts>8000):
                     newgrp = GeomGroup()
                     newgrp.add(geom)
                     newgrp.trapezoids(geom.layer)

@@ -28,8 +28,8 @@ themask.set_cache(True) #Turns on cache
 geomE = sm.GeomGroup()
 
 # Usually we define a write-field region to place our elements
-# Let's use a standard 5x5 grid of 500-um write fields
-themask.addWriteFieldGrid(500, 0, 0, 5, 5)
+# Let's use a 2x2 grid of 500-um write fields
+themask.addWriteFieldGrid(500, 0, 0, 2, 2)
 
 # Now, it's good to place some e-beam marks
 # for multi-layer alignment. A mark is available in base lib
@@ -37,7 +37,7 @@ markdev = smdev.Device.build_registered("BASELIB_CMARK")
 # We can change some parameter of the marker, by default it's the e-beam marker
 # We create a markerset first
 markerset = smlay.MarkerSet("Ebeam1", markdev,
-                x0=-200,y0=-200,mset=4,xdist=2400,ydist=2400)
+                x0=-200,y0=-200,mset=4,xdist=900,ydist=900)
 themask.addMarkers(markerset)
 
 # Then we proceed with the drawing of various parts 

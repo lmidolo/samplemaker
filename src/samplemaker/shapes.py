@@ -425,7 +425,31 @@ class GeomGroup:
         for geom in self.group:
             bb.combine(geom.bounding_box())
         return bb
-            
+    
+    def to_boxes(self, layer: int) -> 'GeomGroup':
+        """
+        Generates a GeomGroup with the bounding boxes of each individual 
+        geometry. It can be used to create a coarse overlay mask. Acts
+        on a single layer.
+
+        Parameters
+        ----------
+        layer : int
+            The layer to use for bounding boxes.
+
+        Returns
+        -------
+        'GeomGroup'
+            A geometry group with the bounding boxes of each element in the 
+            original group.
+
+        """
+        bb = GeomGroup()
+        for geom in self.group:
+            if(geom.layer==layer):
+                bb+=geom.bounding_box().toRect()
+        bb.set_layer(layer)
+        return bb
             
     def set_layer(self,layer: int):
         """
@@ -609,6 +633,48 @@ class GeomGroup:
         sel = eval(code, {"__builtins__": {}}, allowed_names)
         g.group[:] = [sflat.group[i] for i,val in enumerate(sel) if val]
         return g
+       
+    def find_matching_patterns(self, pattern: "GeomGroup", layer: int):        
+        """
+        Finds the position of a given repeating pattern in the geometry.
+        User provides a pattern as a geom group. The pattern should not be 
+        disjoint (i.e. after boolean union, it should contain one element only)
+        The code search for the identical pattern in the whole group for a given
+        layer. Once found, an array of x,y coordinates is returned, corresponding
+        to coordinates of the pattern.
+        Note, the code performs boolean union on the input pattern as well as
+        on the entire geometry.
+
+        Parameters
+        ----------
+        pattern : "GeomGroup"
+            The pattern to be searched. Must be a single connected polygon
+        layer : int
+            The layer to perform the search on.
+
+        Returns
+        -------
+        res : List
+            A list of coordinate pairs, corresponding to the location of the pattern.
+
+        """
+        psearch=pattern.copy()
+        psearch.all_to_poly()
+        psearch.boolean_union(layer)
+        if(len(psearch.group)!=1):
+            print("It is only possible to search for a single polygon shape")
+        plook = self.copy().boolean_union(layer)
+        b1 = psearch.bounding_box()
+        psearch.translate(-b1.cx(),-b1.cy())
+        g2 = psearch.group[0]
+        res = []
+        for g in plook.group:
+            if(type(g)==Poly):
+                bb=g.bounding_box()
+                g.translate(-bb.cx(),-bb.cy())
+                if(g.identical_to(g2)):
+                     res+=[[bb.cx(),bb.cy()]]   
+        return res
         
             
     def get_area(self)->float:
@@ -1034,9 +1100,9 @@ class GeomGroup:
         if len(sel.group)==0: 
             return self
         bb = sel.bounding_box().toRect();
+        bb.set_layer(layer)
         if(offset!=0):
             bb.poly_resize(offset, layer)
-        bb.set_layer(layer)
         pgm = bb.__get_boopy__(layer)
         pgm.difference(pg0)
         self.group[:] = [g for g in self.group if not (type(g)==Poly and g.layer==layer)]        
@@ -1064,6 +1130,49 @@ class GeomGroup:
         self.group[:] = [g for g in self.group if not (type(g)==Poly and g.layer==layer)]
         self.__set_boopy__(pg0, layer)
         return self
+    
+    def poly_filter(self, keep_str: str) -> int:
+        """
+        Performs filtering of vertices based on a condition string.
+        Possible conditions are expressed based on the following variables
+        'A': "Three-point polygon unsigned area",
+        'As': "Three-point polygon signed area",
+        'P': "three point perimeter",
+        'S': "Shape index of the triangle (4*pi*A/(P**2))",
+        'x': "x-coordinate of query point",
+        'y': "y-coordinate of query point",
+        'xm': "x-coordinate of previous point",
+        'ym': "y-coordinate of previous point",
+        'xp': "x-coordinate of next point",
+        'yp': "y-coordinate of next point",
+        'dm': "distance between query point and previous point",
+        'dp': "distance between query point and next point",
+        'd0': "distance between previous and next point"
+        These variables are defined over 3 consecutive points.
+        If the condition is met, the middle point is kept, otherwise
+        it is discarded and the next 3 points are tested. All layers are used
+
+        Parameters
+        ----------
+        keep_str : str
+            String that contains the condition to keep a vertex or not.
+
+        Raises
+        ------
+        NameError
+            If a name that is not allowed is used.
+
+        Returns
+        -------
+        int
+            The number of vertices discarded.
+
+        """
+        ndisc = 0
+        for g in self.group:
+            if(type(g)==Poly):
+                ndisc+=g.three_point_filter(keep_str)
+        return ndisc
 
 class Dot:
     def __init__(self,x,y):
@@ -1360,6 +1469,103 @@ class Poly:
             j=i
         return p
     
+    def three_point_filter(self,keep_str: str) -> int:
+        """
+        Performs filtering of vertices based on a condition string.
+        Possible conditions are expressed based on the following variables
+        'A': "Three-point polygon unsigned area",
+        'As': "Three-point polygon signed area",
+        'P': "three point perimeter",
+        'S': "Shape index of the triangle (4*pi*A/(P**2))",
+        'x': "x-coordinate of query point",
+        'y': "y-coordinate of query point",
+        'xm': "x-coordinate of previous point",
+        'ym': "y-coordinate of previous point",
+        'xp': "x-coordinate of next point",
+        'yp': "y-coordinate of next point",
+        'dm': "distance between query point and previous point",
+        'dp': "distance between query point and next point",
+        'd0': "distance between previous and next point"
+        These variables are defined over 3 consecutive points.
+        If the condition is met, the middle point is kept, otherwise
+        it is discarded and the next 3 points are tested.
+
+        Parameters
+        ----------
+        keep_str : str
+            String that contains the condition to keep a vertex or not.
+
+        Raises
+        ------
+        NameError
+            If a name that is not allowed is used.
+
+        Returns
+        -------
+        int
+            The number of vertices discarded.
+
+        """
+        allowed_names = {'A': "Three-point polygon unsigned area",
+                         'As': "Three-point polygon signed area",
+                         'P': "three point perimeter",
+                         'S': "Shape index of the triangle (4*pi*A/(P**2))",
+                         'x': "x-coordinate of query point",
+                         'y': "y-coordinate of query point",
+                         'xm': "x-coordinate of previous point",
+                         'ym': "y-coordinate of previous point",
+                         'xp': "x-coordinate of next point",
+                         'yp': "y-coordinate of next point",
+                         'dm': "distance between query point and previous point",
+                         'dp': "distance between query point and next point",
+                         'd0': "distance between previous and next point"}
+        code = compile(keep_str,"<string>","eval")
+        for name in code.co_names:
+            if(name not in allowed_names):
+                raise NameError(f"Use of expression {name} not allowed")
+        
+#        g.group[:] = [sflat.group[i] for i,val in enumerate(sel) if val]
+ #       return g
+        x = self.data[0::2]
+        y = self.data[1::2]
+        xf = []
+        yf = []
+        n = int(self.Npts)
+        ndisc = 0
+        j = n-1
+        k = n-2
+        for i in range(n):
+            Atri = x[i]*(y[j]-y[k])+x[j]*(y[k]-y[i]) + x[k]*(y[i]-y[j])
+            d1 = np.sqrt((x[i]-x[j])**2+(y[i]-y[j])**2)
+            d2 = np.sqrt((x[j]-x[k])**2+(y[j]-y[k])**2)
+            d3 = np.sqrt((x[i]-x[k])**2+(y[i]-y[k])**2)
+            allowed_names["A"]=abs(Atri)/2
+            allowed_names["As"]=Atri/2
+            allowed_names["P"]=d1+d2+d3
+            allowed_names["S"]=abs(Atri)*2*np.pi/allowed_names["P"]**2
+            allowed_names["x"]=x[j]
+            allowed_names["y"]=y[j]
+            allowed_names["xm"]=x[k]
+            allowed_names["ym"]=y[k]
+            allowed_names["xp"]=x[i]
+            allowed_names["yp"]=y[i]
+            allowed_names["dm"]=d2
+            allowed_names["dp"]=d1
+            allowed_names["d0"]=d3            
+            sel = eval(code, {"__builtins__": {}}, allowed_names)
+            if(sel):
+                xf+=[x[j]]
+                yf+=[y[j]]
+                k=j
+                j=i
+            else:
+                ndisc+=1
+                j=i
+        self.set_points(xf,yf)
+        return ndisc
+        
+            
+    
     def to_polygon(self):
         g = GeomGroup()
         g.add(self)
@@ -1383,6 +1589,24 @@ class Poly:
             g.add(Circle(cx,cy,r_avg,self.layer))
         return g
         
+    def identical_to(self, p2: "Poly"):
+        x = self.data[0::2]
+        y = self.data[1::2]
+        x2 = p2.data[0::2]
+        y2 = p2.data[1::2]
+        x3 = np.append(x,x)
+        y3 = np.append(y,y)
+        for e in range(0, len(x)):
+            k = 0
+            for w in range(e, e + len(x)):
+                if x2[k]==x3[w] and y2[k]==y3[w]:
+                    k+= 1
+                else:
+                    break
+            # if all n elements are same circularly
+            if k == len(x):
+                return True
+        return False
 
     def point_inside(self,x,y):
         c = False
