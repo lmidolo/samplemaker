@@ -2049,14 +2049,18 @@ class Circle:
     def rotate_translate(self,xc,yc,rot):
         cost = math.cos(rot/180*math.pi)
         sint = math.sin(rot/180*math.pi)
-        self.x0 = cost*(self.x0)-sint*(self.y0)+xc
-        self.y0 = sint*(self.x0)+cost*(self.y0)+yc
+        x = self.x0
+        y = self.y0
+        self.x0 = cost*x-sint*y+xc
+        self.y0 = sint*x+cost*y+yc
     
     def rotate(self,xc,yc,rot):
         cost = math.cos(rot/180*math.pi)
         sint = math.sin(rot/180*math.pi)
-        self.x0 = cost*(self.x0-xc)-sint*(self.y0-yc)+xc
-        self.y0 = sint*(self.x0-xc)+cost*(self.y0-yc)+yc
+        x = self.x0
+        y = self.y0
+        self.x0 = cost*(x-xc)-sint*(y-yc)+xc
+        self.y0 = sint*(x-xc)+cost*(y-yc)+yc
         
     def scale(self,xc,yc,scale_x,scale_y):
         self.x0 = scale_x*(self.x0-xc)+xc
