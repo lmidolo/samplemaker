@@ -478,15 +478,20 @@ def make_rounded_rect(x0: float,y0: float,width: float,
         A geometry containing a single rectangle.
 
     """
+    w0 = width
+    h0 = height
     width=width-2*corner_radius
     height=height-2*corner_radius
     r1 = make_poly([x0-width/2,x0+width/2,x0+width/2,x0-width/2],
                    [y0-height/2,y0-height/2,y0+height/2,y0+height/2],layer);
+    
+    r1.poly_resize(corner_radius, layer, corner_radius>0, resolution*4)
+    bb1 = r1.bounding_box()
+    r1.scale(x0,y0,w0/bb1.width,h0/bb1.height)
     if(numkey!=5):
         xoff = -((numkey-1)%3-1)
         yoff = math.floor((9-numkey)/3)-1
         r1.translate(xoff*(width+2*corner_radius)/2,yoff*(height+2*corner_radius)/2)
-    r1.poly_resize(corner_radius, layer, corner_radius>0, resolution*4)
     return r1
 
 def make_tapered_path(xpts: List[float],ypts: List[float],
