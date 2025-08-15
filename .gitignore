@@ -52,6 +52,6 @@ Thumbs.db
 *.cel
 *.lel
 *.gds
-src/boopy/*.pro.user
+src/boopy/build/
 html/
 tests/

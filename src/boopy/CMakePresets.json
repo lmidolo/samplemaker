@@ -1,0 +1,22 @@
+{
+  "version": 3,
+  "configurePresets": [
+     {
+      "name": "release",
+      "description": "Generic Release build with the first compiler found",
+      "binaryDir": "${sourceDir}/build/release",
+      "installDir": "${sourceDir}/install/release",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "YES"
+      }
+    }
+  ],
+  "buildPresets": [
+  {
+      "name": "release",
+      "configurePreset": "release"
+    }
+	]
+}

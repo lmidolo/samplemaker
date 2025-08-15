@@ -1,0 +1,7 @@
+{
+	"name": "boopy",
+    "dependencies": [
+        "boost-polygon",
+		"boost-geometry"
+    ]
+  }
