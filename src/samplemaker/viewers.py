@@ -33,7 +33,7 @@ def __GeomGetPatches(grp: "GeomGroup"):
         if(geomtype==smsh.Poly):
             N=int(len(geom.data)/2)
             xy = np.reshape(geom.data,(N,2))
-            tmpp = Polygon(xy,True)
+            tmpp = Polygon(xy)
             tmpp.set_facecolor(lcolor)
             patches.append(tmpp)
             continue
@@ -44,7 +44,7 @@ def __GeomGetPatches(grp: "GeomGroup"):
             continue
         if(geomtype==smsh.Path):
             xy = np.transpose([geom.xpts,geom.ypts])
-            tmpp = Polygon(xy,False)
+            tmpp = Polygon(xy)
             tmpp.set_edgecolor(lcolor)
             tmpp.set_fill(False)
             patches.append(tmpp)
@@ -66,7 +66,7 @@ def __GeomGetPatches(grp: "GeomGroup"):
             geom=gpl.group[0]
             N=int(len(geom.data)/2)
             xy = np.reshape(geom.data,(N,2))
-            tmpp = Polygon(xy,True)
+            tmpp = Polygon(xy)
             tmpp.set_facecolor(lcolor)
             patches.append(tmpp)
             continue
@@ -75,7 +75,7 @@ def __GeomGetPatches(grp: "GeomGroup"):
             geom=gpl.group[0]
             N=int(len(geom.data)/2)
             xy = np.reshape(geom.data,(N,2))
-            tmpp = Polygon(xy,True)
+            tmpp = Polygon(xy)
             tmpp.set_facecolor(lcolor)
             patches.append(tmpp)
             continue

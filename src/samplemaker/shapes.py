@@ -66,7 +66,7 @@ to save memory and computation time. For example
 import numpy as np
 from copy import deepcopy
 import math
-from pkg_resources import resource_filename
+from importlib import resources
 import samplemaker.resources.boopy as boopy
 from typing import List
 from samplemaker import _BoundingBoxPool
@@ -837,8 +837,8 @@ class GeomGroup:
         
                    
     
-    def __get_boopy__(self,layer: int):
-        pg0 = boopy.PolyGroup()
+    def __get_boopy__(self,layer: int, addr: int = 0):
+        pg0 = boopy.PolyGroup(addr)
         for i in range(len(self.group)):
             if(type(self.group[i])==Poly and self.group[i].layer==layer):
                 pdata = self.group[i].int_data()
@@ -904,7 +904,7 @@ class GeomGroup:
         """
         # Get the boost python data
         pgA = self.__get_boopy__(layerA)
-        pgB = targetB.__get_boopy__(layerB)
+        pgB = targetB.__get_boopy__(layerB,1)
         # Difference
         pgA.difference(pgB)
         # Remove the old polygons
@@ -936,7 +936,7 @@ class GeomGroup:
         """
         # Get the boost python data
         pgA = self.__get_boopy__(layerA)
-        pgB = targetB.__get_boopy__(layerB)
+        pgB = targetB.__get_boopy__(layerB,1)
         # Difference
         pgA.exor(pgB)
         # Remove the old polygons
@@ -968,7 +968,7 @@ class GeomGroup:
         """
         # Get the boost python data
         pgA = self.__get_boopy__(layerA)
-        pgB = targetB.__get_boopy__(layerB)
+        pgB = targetB.__get_boopy__(layerB,1)
         # Difference
         pgA.intersection(pgB)
         # Remove the old polygons
@@ -1054,7 +1054,7 @@ class GeomGroup:
 
         """
         pg0 = self.__get_boopy__(layer)
-        pgorig = self.__get_boopy__(layer)
+        pgorig = self.__get_boopy__(layer,1)
         if(distance != 0):
             pg0.resize(round((offset+distance)*1000),corner_fill_arc, num_circle_segments)
             pgorig.resize(round(distance*1000),corner_fill_arc,num_circle_segments)
@@ -1103,7 +1103,7 @@ class GeomGroup:
         bb.set_layer(layer)
         if(offset!=0):
             bb.poly_resize(offset, layer)
-        pgm = bb.__get_boopy__(layer)
+        pgm = bb.__get_boopy__(layer,1)
         pgm.difference(pg0)
         self.group[:] = [g for g in self.group if not (type(g)==Poly and g.layer==layer)]        
         self.__set_boopy__(pgm, layer)
@@ -1380,7 +1380,7 @@ class Poly:
         self.Npts = math.floor(self.data.size/2)
         
     def int_data(self):
-        return np.round_(self.data*1000).astype(int)
+        return np.round(self.data*1000).astype(int)
     
     def set_int_data(self, idata):
         self.data = idata.astype("float64")/1000;
@@ -2224,7 +2224,7 @@ class Arc(Ring):
 # Load fonts and store the glyphs
 # Maybe we should place this somewhere else
 caps=dict()
-with open(resource_filename('samplemaker.resources','sm_stencil_font.txt'),encoding="ISO-8859-1") as f: 
+with open(resources.files('samplemaker.resources').joinpath('sm_stencil_font.txt'),encoding="ISO-8859-1") as f: 
     c = 'a';
     for line in f: 
         test = line.rstrip('\n').split(' ')

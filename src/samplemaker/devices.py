@@ -396,7 +396,7 @@ class Device:
         """
         self._ports[port.name]=port
         
-    def addparameter(self, param_name: str, default_value, param_description: str, param_type=float, param_range=(0,np.infty)):
+    def addparameter(self, param_name: str, default_value, param_description: str, param_type=float, param_range=(0,np.inf)):
         """
         Call this from the parameters() method to add a parameter to the device.
         
@@ -411,7 +411,7 @@ class Device:
         param_type : TYPE, optional
             The type of the parameter. The default is float.
         param_range : tuple, optional
-            A tuple specifying the min and max value of the parameter . The default is (0,np.infty).
+            A tuple specifying the min and max value of the parameter . The default is (0,np.inf).
 
         Returns
         -------
@@ -426,7 +426,7 @@ class Device:
         self._ptype[param_name] = param_type
         self._prange[param_name] = param_range
         
-    def addlocalparameter(self,param_name: str, default_value, param_description: str, param_type=float, param_range=(0,np.infty)):
+    def addlocalparameter(self,param_name: str, default_value, param_description: str, param_type=float, param_range=(0,np.inf)):
         """
         Defines a local parameter that is only used within the class and not 
         controllable from outside. 
@@ -442,7 +442,7 @@ class Device:
         param_type : TYPE, optional
             The type of the paramter. The default is float.
         param_range : tuple, optional
-            A tuple specifying the min and max value of the parameter . The default is (0,np.infty).
+            A tuple specifying the min and max value of the parameter . The default is (0,np.inf).
 
         Returns
         -------
