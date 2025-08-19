@@ -63,8 +63,8 @@ class DirectionalCoupler(Device):
         self.addparameter("length", 20, "Coupling length",float)
         self.addparameter("width", 0.3, "Width of the waveguides in the coupling section",float,(0.01,1))
         self.addparameter("gap", 0.5, "Distance between waveguides in the coupling section", float)
-        self.addparameter("input_dist", 5, "Distance between waveguides at input", float,(0.01,np.infty))
-        self.addparameter("input_len", 7, "Length of the input section from input to coupling", float, (3,np.infty))        
+        self.addparameter("input_dist", 5, "Distance between waveguides at input", float,(0.01,np.inf))
+        self.addparameter("input_len", 7, "Length of the input section from input to coupling", float, (3,np.inf))        
         
     def geom(self):
         p = self.get_params();
