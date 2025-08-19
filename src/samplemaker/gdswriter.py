@@ -83,7 +83,7 @@ class GDSWriter:
         self.fid.write(struct.pack(">%sH" % buf.size,*buf))
         self.fid.write(struct.pack(">i",math.floor(path.width*1000)))
         self.fid.write(struct.pack(">2H",8*len(path.xpts)+4,0x1003))
-        data = np.transpose(np.round_((np.array([path.xpts,path.ypts])*1000)).astype(int)).reshape(-1)
+        data = np.transpose(np.round((np.array([path.xpts,path.ypts])*1000)).astype(int)).reshape(-1)
         self.fid.write(struct.pack(">%si" % data.size,*data))
         self.fid.write(struct.pack(">2H",4,0x1100))
         
