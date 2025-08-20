@@ -12,20 +12,43 @@ import os
 import numpy as np
 import itertools
 
-# class libhandle():
-#     def __init__(self):
-        
-#         dll_lib_path = os.path.join(os.path.dirname(__file__),"boopy_ffi.dll")
-#         self.__bpdll__ = cdll.LoadLibrary(dll_lib_path)
-#         self.__bpdll__.bp_addPolyData.argtypes = [np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,flags="C"), c_size_t]
 
-#     def __del__(obj):
-#         print("Called")
 
-# test = libhandle()
 dll_lib_path = os.path.join(os.path.dirname(__file__),"boopy_ffi.dll")
 __bpdll__ = cdll.LoadLibrary(dll_lib_path)
 __bpdll__.bp_addPolyData.argtypes = [np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,flags="C"), c_size_t]
+
+_bp_data = dict()
+_bp_data["lib"] = __bpdll__
+
+
+class VarWatcher(object):
+    def __init__(self, ip):
+        self.shell = ip
+        self.last_x = None
+
+    def post_execute(self):
+
+        lib = _bp_data["lib"]
+        libHandle = lib._handle
+        del lib
+        kernel32 = WinDLL('kernel32', use_last_error=True)
+        kernel32.FreeLibrary.argtypes = [wintypes.HMODULE]
+        kernel32.FreeLibrary(libHandle)
+        self.shell.events.unregister('post_execute',self.post_execute)
+
+
+    
+#Check if running on Ipython
+try: 
+    vw = VarWatcher(get_ipython()) 
+    ip.events.register('post_execute',vw.post_execute)
+except:
+    pass
+
+
+
+
 class PolyGroup():
     def __init__(self, addr: int):
         self.addr = addr   
