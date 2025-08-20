@@ -28,7 +28,6 @@ class VarWatcher(object):
         self.last_x = None
 
     def post_execute(self):
-
         lib = _bp_data["lib"]
         libHandle = lib._handle
         del lib
@@ -37,12 +36,10 @@ class VarWatcher(object):
         kernel32.FreeLibrary(libHandle)
         self.shell.events.unregister('post_execute',self.post_execute)
 
-
-    
 #Check if running on Ipython
 try: 
     vw = VarWatcher(get_ipython()) 
-    ip.events.register('post_execute',vw.post_execute)
+    vw.shell.events.register('post_execute',vw.post_execute)
 except:
     pass
 
