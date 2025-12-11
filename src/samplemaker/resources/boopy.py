@@ -12,9 +12,15 @@ import os
 import numpy as np
 import itertools
 
+libname = "boopy_ffi"
+if os.name=="posix":
+    import _ctypes
+    libname = "lib"+libname+".so"
+else:
+    libname = libname+".dll"
 
-
-dll_lib_path = os.path.join(os.path.dirname(__file__),"boopy_ffi.dll")
+    
+dll_lib_path = os.path.join(os.path.dirname(__file__),libname)
 __bpdll__ = cdll.LoadLibrary(dll_lib_path)
 __bpdll__.bp_addPolyData.argtypes = [np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,flags="C"), c_size_t]
 
@@ -31,9 +37,12 @@ class VarWatcher(object):
         lib = _bp_data["lib"]
         libHandle = lib._handle
         del lib
-        kernel32 = WinDLL('kernel32', use_last_error=True)
-        kernel32.FreeLibrary.argtypes = [wintypes.HMODULE]
-        kernel32.FreeLibrary(libHandle)
+        if os.name=="nt":
+            kernel32 = WinDLL('kernel32', use_last_error=True)
+            kernel32.FreeLibrary.argtypes = [wintypes.HMODULE]
+            kernel32.FreeLibrary(libHandle)
+        if os.name=="posix":
+            _ctypes.dlclose(libHandle)
         self.shell.events.unregister('post_execute',self.post_execute)
 
 #Check if running on Ipython

@@ -21,7 +21,7 @@
 #define DLL_EXPORT                                                             \
   extern "C" __attribute__((visibility("default"))) __attribute__((used))
 #else
-#define DLL_EXPORT
+#define DLL_EXPORT extern "C" 
 #endif
 
 DLL_EXPORT void bp_setGroupAddress(const unsigned int addr);
