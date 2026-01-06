@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 11_Tutorial_LayoutAssembly
 """

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 10_Tutorial_ElectricalPorts
 """

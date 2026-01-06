@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This module contains the base classes for generating re-usable device classes.
 
@@ -396,7 +395,7 @@ class Device:
         """
         self._ports[port.name]=port
         
-    def addparameter(self, param_name: str, default_value, param_description: str, param_type=float, param_range=(0,np.infty)):
+    def addparameter(self, param_name: str, default_value, param_description: str, param_type=float, param_range=(0,np.inf)):
         """
         Call this from the parameters() method to add a parameter to the device.
         
@@ -411,7 +410,7 @@ class Device:
         param_type : TYPE, optional
             The type of the parameter. The default is float.
         param_range : tuple, optional
-            A tuple specifying the min and max value of the parameter . The default is (0,np.infty).
+            A tuple specifying the min and max value of the parameter . The default is (0,np.inf).
 
         Returns
         -------
@@ -426,7 +425,7 @@ class Device:
         self._ptype[param_name] = param_type
         self._prange[param_name] = param_range
         
-    def addlocalparameter(self,param_name: str, default_value, param_description: str, param_type=float, param_range=(0,np.infty)):
+    def addlocalparameter(self,param_name: str, default_value, param_description: str, param_type=float, param_range=(0,np.inf)):
         """
         Defines a local parameter that is only used within the class and not 
         controllable from outside. 
@@ -442,7 +441,7 @@ class Device:
         param_type : TYPE, optional
             The type of the paramter. The default is float.
         param_range : tuple, optional
-            A tuple specifying the min and max value of the parameter . The default is (0,np.infty).
+            A tuple specifying the min and max value of the parameter . The default is (0,np.inf).
 
         Returns
         -------
@@ -684,13 +683,13 @@ class Device:
             
             if hsh not in _DevicePool:
                 _DeviceCountPool[srefname] += 1
-                srefname += "_%0.4i"%_DeviceCountPool[srefname]
+                srefname += f"_{_DeviceCountPool[srefname]:04d}"
                 LayoutPool[srefname] = self.geom()
                 _BoundingBoxPool[srefname] = LayoutPool[srefname].bounding_box()
                 _DevicePool[hsh] = srefname
                 _DeviceLocalParamPool[hsh] = deepcopy(self._localp)
             else:
-                srefname += "_%0.4i"%_DeviceCountPool[srefname]
+                srefname += f"_{_DeviceCountPool[srefname]:04d}"
                 self._localp = _DeviceLocalParamPool[hsh]
             # now create a ref
             g = make_sref(self._x0,self._y0, _DevicePool[hsh], 
@@ -1047,7 +1046,7 @@ class Circuit(Device):
                 dev=_DeviceList[nle.devname].build()
                 for key,value in nle.params.items():
                     dev.set_param(key,value)
-                self.addparameter("dev_%s_%i"%(nle.devname,i), dev._p, "Device parameters for %s"%nle.devname)
+                self.addparameter(f"dev_{nle.devname}_{i:d}", dev._p, f"Device parameters for {nle.devname}")
             i+=1
            
     def set_param(self, param_name: str, value):
@@ -1110,7 +1109,7 @@ class Circuit(Device):
             if(hasattr(dev,"_seq")):
                 dev._seq.reset()               
             # Set all parameter from Netlist hierarchy
-            dev._p = self._p["dev_%s_%i"%(nle.devname,i)]
+            dev._p = self._p[f"dev_{nle.devname}_{i:d}"]
             i+=1
             dev._x0 = nle.x0
             dev._y0 = nle.y0
@@ -1327,18 +1326,18 @@ def ExportDeviceSchematics(filename: str = "SampleMakerLibrary.lel"):
                 y = g.data[1::2]
                 for i in range(len(x)-1):
                     if ((x[i+1]-x[i])**2 +(y[i+1]-y[i])**2 > 0.2): 
-                        f.write("<Line {x0} {y0} {x1} {y1} wire>\n".format(x0=int(x[i]),y0=int(y[i]),x1=int(x[i+1]),y1=int(y[i+1])))
+                        f.write(f"<Line {int(x[i])} {int(y[i])} {int(x[i+1])} {int(y[i+1])} wire>\n")
                     
         dev.ports()
         for pname, port in dev._ports.items():
-            f.write("<Port {x} {y} {name}>\n".format(x=int(port.x0*100/scale),y=int(port.y0*100/scale),name=pname))
+            f.write(f"<Port {int(port.x0*100/scale)} {int(port.y0*100/scale)} {pname}>\n")
             
         f.write("</Symbol>\n")
         #f.write("<Offsetlabel 0 -50 -50>\n")
         f.write("<Netlist spice>\n")
         f.write("$devicename ")
         for pname, port in dev._ports.items():
-            f.write("{name} $node({name}) ".format(name=pname))
+            f.write(f"{pname} $node({pname}) ")
         f.write(". ")
         for p,val in oj._p.items():
             f.write(p+" $" + p +" ")

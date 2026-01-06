@@ -55,3 +55,16 @@ Thumbs.db
 src/boopy/*.pro.user
 html/
 tests/
+# Python build artifacts
+build/
+*.egg-info/
+wheelhouse/
+*.so
+*.pyd
+*.dll
+
+# CMake artifacts
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile

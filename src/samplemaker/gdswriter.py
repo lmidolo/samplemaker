@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Binary export to GDS files.
 
@@ -71,8 +70,8 @@ class GDSWriter:
         if(poly.layer<0): return
         pdata = poly.int_data()
         buf = np.array([4,0x0800,6,0x0D02,poly.layer,6,0x0E02,0,4*len(pdata)+4,0x1003]);
-        self.fid.write(struct.pack(">%sH" % buf.size,*buf))
-        self.fid.write(struct.pack(">%si" % pdata.size,*pdata))
+        self.fid.write(struct.pack(f">{buf.size}H",*buf))
+        self.fid.write(struct.pack(f">{pdata.size}i",*pdata))
         self.fid.write(struct.pack(">2H",4,0x1100))
     
     def __write_circle(self,circ):
@@ -80,11 +79,11 @@ class GDSWriter:
                 
     def __write_path(self,path):
         buf = np.array([4,0x0900,6,0x0D02,path.layer,6,0x0E02,0,6,0x2102,1,8,0x0F03]);
-        self.fid.write(struct.pack(">%sH" % buf.size,*buf))
+        self.fid.write(struct.pack(f">{buf.size}H",*buf))
         self.fid.write(struct.pack(">i",math.floor(path.width*1000)))
         self.fid.write(struct.pack(">2H",8*len(path.xpts)+4,0x1003))
-        data = np.transpose(np.round_((np.array([path.xpts,path.ypts])*1000)).astype(int)).reshape(-1)
-        self.fid.write(struct.pack(">%si" % data.size,*data))
+        data = np.transpose(np.round(np.array([path.xpts,path.ypts])*1000).astype(int)).reshape(-1)
+        self.fid.write(struct.pack(f">{data.size}i",*data))
         self.fid.write(struct.pack(">2H",4,0x1100))
         
     def __write_text(self,text):
@@ -93,7 +92,7 @@ class GDSWriter:
         buf = np.array([4,0x0C00,  6,0x0D02,text.layer,
                         6,0x1602,0,6,0x1701,text.posu+text.posv*4+16,
                         8,0x0F03]);
-        self.fid.write(struct.pack(">%sH" % buf.size,*buf))
+        self.fid.write(struct.pack(f">{buf.size}H",*buf))
         self.fid.write(struct.pack(">i",math.floor(text.width*1000)))
         self.fid.write(struct.pack(">2H",12,0x1003))
         self.fid.write(struct.pack(">2i",
@@ -115,7 +114,7 @@ class GDSWriter:
         #if(angle!=0):
         #    strans+=2
         buf = np.array([6,0x1A01,strans])
-        self.fid.write(struct.pack(">%sH" % buf.size,*buf))
+        self.fid.write(struct.pack(f">{buf.size}H",*buf))
         if(mag!=1):
              self.fid.write(struct.pack(">2H",12,0x1B05))
              self.__write_real8(mag)
@@ -185,7 +184,7 @@ class GDSWriter:
         #Write header
         lt=time.localtime(time.time())
         buf = np.array([6,2,3,28,258,lt.tm_year,lt.tm_mon,lt.tm_mday,lt.tm_hour,lt.tm_min,lt.tm_sec,lt.tm_year,lt.tm_mon,lt.tm_mday,lt.tm_hour,lt.tm_min,lt.tm_sec]);
-        self.fid.write(struct.pack(">%sH" % buf.size,*buf));
+        self.fid.write(struct.pack(f">{buf.size}H",*buf));
         # Library name
         self.__write_string(filename,518)
         # Units
@@ -216,7 +215,7 @@ class GDSWriter:
         print("Writing structure: " + structure_name)
         lt=time.localtime(time.time())
         buf = np.array([28,1282,lt.tm_year,lt.tm_mon,lt.tm_mday,lt.tm_hour,lt.tm_min,lt.tm_sec,lt.tm_year,lt.tm_mon,lt.tm_mday,lt.tm_hour,lt.tm_min,lt.tm_sec]);
-        self.fid.write(struct.pack(">%sH" % buf.size,*buf));
+        self.fid.write(struct.pack(f">{buf.size}H",*buf));
         self.__write_string(structure_name,1542)
         
     def write_geomgroup(self,geom_group: GeomGroup):
@@ -361,7 +360,7 @@ class GDSWriter:
         self.fid.write(struct.pack('>2H',4,1024));
         pos = self.fid.tell()
         buf = np.zeros(2048-pos%2048,dtype=int);
-        self.fid.write(struct.pack("%sb" % buf.size,*buf))
+        self.fid.write(struct.pack(f"{buf.size}b",*buf))
         print('Writing to GDS complete.')
         self.fid.close()
         

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 12_Tutorial_ImportingCircuits
 """

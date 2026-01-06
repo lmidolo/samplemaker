@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 """
-Created on Sun Dec 20 11:10:49 2020
+Resources module for samplemaker.
 
-@author: midolo
+This module provides access to resource files and compiled extensions,
+including the boopy C++ extension for Boolean polygon operations.
 """
-

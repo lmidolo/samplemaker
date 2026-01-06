@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Classes to handle custom sequences of shapes (e.g. waveguides).
 

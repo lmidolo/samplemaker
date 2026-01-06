@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 01_Tutorial_Shapes
 """

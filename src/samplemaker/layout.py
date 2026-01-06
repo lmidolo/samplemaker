@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This module contains the classes to configure the mask layout. 
 
@@ -683,7 +682,7 @@ class DeviceTable:
                 # Store external ports to expose them
                 for pp in portmap[j][i].values():
                     p1 = deepcopy(pp)
-                    p1.name+="_%i_%i"%(j,i)
+                    p1.name+=f"_{j:d}_{i:d}"
                     self._external_ports[p1.name]=p1
         self._getgeom_ran = True
         return g
@@ -889,7 +888,7 @@ class Mask:
                     _DevicePool[key]=data[3][key]
                 for key in data[4].keys():                
                     _BoundingBoxPool[key]=data[4][key]
-        except IOError:
+        except OSError:
             pass
     
     def __cleanup_cellref(self):

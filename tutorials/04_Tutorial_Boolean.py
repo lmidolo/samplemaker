@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 04_Tutorial_Boolean
 """

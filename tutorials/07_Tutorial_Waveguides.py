@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 07_Tutorial_Waveguides
 """

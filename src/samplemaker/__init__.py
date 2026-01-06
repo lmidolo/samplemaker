@@ -19,14 +19,9 @@ the European Research Council (ERC) under the European Union’s Horizon 2020 re
 .. include:: ./documentation.md
 """
 
-from typing import (  # noqa: F401
-    cast, Any, Callable, Dict, Generator, Iterable, List, Mapping, NewType,
-    Optional, Set, Tuple, Type, TypeVar, Union,
-)
-
 __version__ = "5.4.3"
     
-__pdoc__: Dict[str, Union[bool, str]] = {}
+__pdoc__: dict[str, bool | str] = {}
 __pdoc__["samplemaker.Tutorials"]=False
 __pdoc__["samplemaker.tests"]=False
 __pdoc__["samplemaker.resources"]=False

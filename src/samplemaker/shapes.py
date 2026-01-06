@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Shape classes supported by the GDS format and most lithography systems / pattern generators.
 
@@ -63,15 +62,18 @@ to save memory and computation time. For example
 
 """
 
+import pathlib
 import numpy as np
 from copy import deepcopy
 import math
-from pkg_resources import resource_filename
 import samplemaker.resources.boopy as boopy
-from typing import List
 from samplemaker import _BoundingBoxPool
 
 _glyphs = dict()
+
+_STENCIL_FONT_FILENAME = "sm_stencil_font.txt"
+_STENCIL_FONT_ENCODING = "ISO-8859-1"
+_STENCIL_FONT_PATH = pathlib.Path(__file__).parent / "resources" / _STENCIL_FONT_FILENAME
 
 class GeomGroup:
     def __init__(self):
@@ -132,7 +134,7 @@ class GeomGroup:
         """
         return deepcopy(self)
     
-    def flatten(self, layer_list: List[int] = []) -> "GeomGroup":
+    def flatten(self, layer_list: list[int] = []) -> "GeomGroup":
         """
         Flattens the entire group. Turns all SREF and AREF objects in flattened objects.
         All references to cell are removed. A new flattened group is returned and no 
@@ -140,7 +142,7 @@ class GeomGroup:
 
         Parameters
         ----------
-        layer_list : List[int], optional
+        layer_list : list[int], optional
             A list of layers that should be used when flattening. The default is [] (=all).
 
         Returns
@@ -491,13 +493,13 @@ class GeomGroup:
                 g.add(geom)
         return g
     
-    def select_layers(self,layers: List[int]) -> 'GeomGroup':
+    def select_layers(self,layers: list[int]) -> 'GeomGroup':
         """
         Create a new GeomGroup containing only shapes in a list of layers.
 
         Parameters
         ----------
-        layers : List[int]
+        layers : list[int]
             The selected layer list.
 
         Returns
@@ -512,13 +514,13 @@ class GeomGroup:
                 g.add(geom)
         return g
     
-    def deselect_layers(self, layers: List[int])-> 'GeomGroup':
+    def deselect_layers(self, layers: list[int])-> 'GeomGroup':
         """
         Create a new GeomGroup containing only shapes that are not in layer list
 
         Parameters
         ----------
-        layers : List[int]
+        layers : list[int]
             A list of layer to deselect.
 
         Returns
@@ -654,7 +656,7 @@ class GeomGroup:
 
         Returns
         -------
-        res : List
+        res : list
             A list of coordinate pairs, corresponding to the location of the pattern.
 
         """
@@ -1380,7 +1382,7 @@ class Poly:
         self.Npts = math.floor(self.data.size/2)
         
     def int_data(self):
-        return np.round_(self.data*1000).astype(int)
+        return np.round(self.data*1000).astype(int)
     
     def set_int_data(self, idata):
         self.data = idata.astype("float64")/1000;
@@ -2224,7 +2226,7 @@ class Arc(Ring):
 # Load fonts and store the glyphs
 # Maybe we should place this somewhere else
 caps=dict()
-with open(resource_filename('samplemaker.resources','sm_stencil_font.txt'),encoding="ISO-8859-1") as f: 
+with open(_STENCIL_FONT_PATH, encoding=_STENCIL_FONT_ENCODING) as f: 
     c = 'a';
     for line in f: 
         test = line.rstrip('\n').split(' ')

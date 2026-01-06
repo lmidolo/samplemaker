@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Binary import of GDS files. 
 
@@ -137,7 +136,7 @@ class GDSReader:
             if(rtype==16): # XY
                 data = self.buf[(pos+4):(pos+hlen)]
                 npts = int(len(data)/4)
-                cur_xy = np.array(struct.unpack(">%si"%npts,data))
+                cur_xy = np.array(struct.unpack(f">{npts}i",data))
             if(rtype==17): # ENDEL
                 if(cur_el == 8): # Make a poly
                     p1 = smsh.Poly([0], [0], cur_layer)

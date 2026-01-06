@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 05_Tutorial_Devices
 """

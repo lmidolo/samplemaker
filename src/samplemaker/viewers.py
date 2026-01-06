@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Basic functions to plot and inspect geometries.
 
@@ -33,7 +32,7 @@ def __GeomGetPatches(grp: "GeomGroup"):
         if(geomtype==smsh.Poly):
             N=int(len(geom.data)/2)
             xy = np.reshape(geom.data,(N,2))
-            tmpp = Polygon(xy,True)
+            tmpp = Polygon(xy,closed=True)
             tmpp.set_facecolor(lcolor)
             patches.append(tmpp)
             continue
@@ -44,7 +43,7 @@ def __GeomGetPatches(grp: "GeomGroup"):
             continue
         if(geomtype==smsh.Path):
             xy = np.transpose([geom.xpts,geom.ypts])
-            tmpp = Polygon(xy,False)
+            tmpp = Polygon(xy,closed=False)
             tmpp.set_edgecolor(lcolor)
             tmpp.set_fill(False)
             patches.append(tmpp)
@@ -57,7 +56,7 @@ def __GeomGetPatches(grp: "GeomGroup"):
         if(geomtype==smsh.ARef):
             continue
         if(geomtype==smsh.Ellipse):
-            tmpe = Ellipse((geom.x0,geom.y0),geom.r*2,geom.r1*2,geom.rot)
+            tmpe = Ellipse((geom.x0,geom.y0),geom.r*2,geom.r1*2,angle=geom.rot)
             tmpe.set_facecolor(lcolor)
             patches.append(tmpe)
             continue
@@ -66,7 +65,7 @@ def __GeomGetPatches(grp: "GeomGroup"):
             geom=gpl.group[0]
             N=int(len(geom.data)/2)
             xy = np.reshape(geom.data,(N,2))
-            tmpp = Polygon(xy,True)
+            tmpp = Polygon(xy,closed=True)
             tmpp.set_facecolor(lcolor)
             patches.append(tmpp)
             continue

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 02_Tutorial_CellReferences
 """

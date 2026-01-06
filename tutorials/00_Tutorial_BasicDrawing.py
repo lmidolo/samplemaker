@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 00_Tutorial_BasicDrawing
 """

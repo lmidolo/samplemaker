@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 03_Tutorial_GroupManipulation
 """

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Automatic port-to-port routing functions.
 
