@@ -98,6 +98,7 @@ from samplemaker import LayoutPool, _DevicePool, _DeviceCountPool, _DeviceLocalP
 import pickle # for cacheing
 from copy import deepcopy
 import math
+from typing import List
 
 class Marker:
     """
@@ -1112,7 +1113,27 @@ class Mask:
             self.addCell(cell, geoms)
             
         
-                
+    def exportDoseTable(self, doses: List[float], layers: List[int]):
+        """
+        Exports a txt file with a dose-layers table
 
+        Parameters
+        ----------
+        doses : List[float]
+            list of doses values (any float).
+        layers : List[int]
+            List of layers corresponding to the dose.
 
+        Returns
+        -------
+        None.
+
+        """
+        if(len(doses) != len(layers)):
+            print("Error: doses and layers do not have the same length")
+        with open(self.name +".txt","w") as f:
+            f.write("Dose Layer\n")
+            for d,l in zip(doses,layers):
+                f.write("%.3f %d\n" % (d,l) )
+        
    

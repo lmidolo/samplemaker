@@ -1363,6 +1363,68 @@ class Box:
         yoff = math.floor((9-numkey)/3)-1
         return (self.cx()-xoff*self.width/2,self.cy()-yoff*self.height/2)
         
+class GSImage: 
+    def __init__(self, x0: float, y0: float, width: float, height: float, 
+                 pix_w: float, pix_h: float):
+        self.x0 = x0
+        self.y0 = y0
+        self.width = width
+        self.height = height
+        self.pix_w = pix_w
+        self.pix_h = pix_h
+        self.Nx = int(np.round(self.width/self.pix_w))
+        self.Ny = int(np.round(self.height/self.pix_h))
+        self.im = np.zeros((self.Ny,self.Nx),dtype=np.uint8)
+        
+    def add_rampH(self, u0: float, u1: float, from_v: int = 0, to_v: int = 255):
+        nx_0 = np.floor(u0/self.pix_w)
+        nx_1 = np.floor(u1/self.pix_w)
+        nx_0 = int(np.clip(nx_0,0,nx_1))
+        nx_1 = int(np.clip(nx_1,nx_0,self.Nx))
+        for i in range(nx_0,nx_1):
+            self.im[:,i] = np.round((i-nx_0)/(nx_1-nx_0)*(to_v-from_v) + from_v).astype(np.uint8)
+
+    def add_rampV(self, v0: float, v1: float, from_v: int = 0, to_v: int = 255):
+        ny_0 = np.floor(v0/self.pix_h)
+        ny_1 = np.floor(v1/self.pix_h)
+        ny_0 = int(np.clip(ny_0,0,ny_1))
+        ny_1 = int(np.clip(ny_1,ny_0,self.Ny))
+        for i in range(ny_0,ny_1):
+            self.im[i,:] = np.round((i-ny_0)/(ny_1-ny_0)*(to_v-from_v) + from_v).astype(np.uint8)
+        
+    def add_box(self, u0: float, u1: float, v0: float, v1: float, value: int):
+        nx_0 = np.floor(u0/self.pix_w)
+        nx_1 = np.floor(u1/self.pix_w)
+        nx_0 = int(np.clip(nx_0,0,nx_1))
+        nx_1 = int(np.clip(nx_1,nx_0,self.Nx))
+        ny_0 = np.floor(v0/self.pix_h)
+        ny_1 = np.floor(v1/self.pix_h)
+        ny_0 = int(np.clip(ny_0,0,ny_1))
+        ny_1 = int(np.clip(ny_1,ny_0,self.Ny))
+        self.im[ny_0:ny_1,nx_0:nx_1] = value
+    
+    def invert(self):
+        self.im = 255-self.im
+        
+    def equalize(self, eql_data):
+        Neq = len(eql_data)
+        self.im = np.interp(self.im,np.linspace(0,255,Neq),(np.array(eql_data)*255).astype(np.uint8))
+    
+    def to_group(self, layer_0: int = 0, levels: int = 256, merge: bool = True):
+        g = GeomGroup()
+        for y in range(self.Ny):
+            for x in range(self.Nx):
+                b = Box(self.x0+x*self.pix_w, self.y0+y*self.pix_h, self.pix_w, self.pix_h)
+                p = b.toPoly()
+                p.layer = int(np.round(self.im[y,x].astype(int)*levels/256)) + layer_0
+                g.add(p)
+        
+        if merge:
+            laylist = g.get_layer_list()
+            for l in laylist:
+                g.boolean_union(l)
+                g.poly_filter("A>0")
+        return g
     
 
 class Poly:
