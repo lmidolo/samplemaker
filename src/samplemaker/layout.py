@@ -199,6 +199,28 @@ class MarkerSet(Marker):
             aref = make_aref(self.x0, self.y0, sref.cellname, sref.group, 2, 2, self.xdist, 0, 0, self.ydist)
             return aref
         return g
+    
+    def getMarkerInfo(self) -> dict:
+        """
+        Provides a dictionary with markset positions
+
+        Returns
+        -------
+        dict
+            A dicitonary containing each mark location.
+
+        """
+        minfo = {"marks":[{"x":self.x0, "y": self.y0}]}
+        if(self.mset==2):
+            minfo["marks"]+=[{"x":self.x0+self.xdist,"y":self.y0+self.ydist}]
+        if(self.mset==4):
+            minfo["marks"] = []
+            for i in range(2):
+                for j in range(2):
+                    x = self.x0+j*self.xdist
+                    y = self.y0+i*self.ydist
+                    minfo["marks"]+=[{"x":x,"y":y}]
+        return minfo["marks"]
 
 class DeviceTableAnnotations:
     def __init__(self,rowfmt: str, colfmt: str, xoff: float, yoff: float, rowvars: tuple, colvars: tuple,
@@ -1014,7 +1036,7 @@ class Mask:
         else:
             LayoutPool[self.mainsymbol] += g
             
-    def addWriteField(self, wf_size: float, x0: float, y0: float, 
+    def addWriteField(self, wf_size: float, x0: float, y0: float, layer: int = 10,
                       passes: int = 1, shift: float = 0):
         '''
         Add a square writefield centered in x0,y0. 
@@ -1027,6 +1049,8 @@ class Mask:
             X-coordinate of the writefield center in um.
         y0 : float
             Y-coordinate of the writefield center in um.
+        layer: int
+            Layer to use for displaying write fields (-1 to disable display)
         passes : int, optional
             Number of write-field passes, not shown in the mask. The default is 1.
         shift : float, optional
@@ -1038,10 +1062,15 @@ class Mask:
 
         '''
         self.writefields+=[(wf_size,x0,y0,passes,shift)];
+        if(layer>=0):
+            s = wf_size
+            wfpath=make_path([-s/2,s/2,s/2,-s/2,-s/2],[-s/2,-s/2,s/2,s/2,-s/2],0.1,layer=layer)
+            wfpath.translate(x0, y0)
+            self.addToMainCell(wfpath)
 
     
     def addWriteFieldGrid(self, wf_size: float, x0: float, y0:float,
-                       Nx: int, Ny: int, passes: int = 1, shift: float=0):
+                       Nx: int, Ny: int, layer: int = 10, passes: int = 1, shift: float=0):
         '''
         Create a grid Nx x Ny of writefields with given size and position.
 
@@ -1057,6 +1086,8 @@ class Mask:
             Number of write fields in x direction.
         Ny : int
             Number of write fields in y direction.
+        layer: int
+            Layer to use when displaying write fields (set to -1 to disable)
         passes : int, optional
             Number of write-field passes, not shown in the mask. The default is 1.
         shift : float, optional
@@ -1069,20 +1100,19 @@ class Mask:
         '''
         for i in range(Nx):
             for j in range(Ny):
-                self.addWriteField(wf_size, i*wf_size+x0, j*wf_size+y0,passes,shift)
-        
-        # Adding writefields
-        if(len(self.writefields)>0):
-            wfs = GeomGroup()
-            for wf in self.writefields:
-                s = wf[0]
-                x = wf[1]
-                y = wf[2]
-                wfpath=make_path([-s/2,s/2,s/2,-s/2,-s/2],[-s/2,-s/2,s/2,s/2,-s/2],0.1,layer=10)
-                wfpath.translate(x, y)
-                wfs+=wfpath
-            self.addToMainCell(wfs)
-        
+                self.addWriteField(wf_size, i*wf_size+x0, j*wf_size+y0,layer, passes,shift)
+    
+    def getFieldsInfo(self) -> dict:
+        """
+        Creates a dictionary with all field information 
+
+        Returns
+        -------
+        dict
+            Storing position and size of each field.
+
+        """
+        return [{"origin":{"x":f[1],"y":f[2]},"size":f[0]} for f in self.writefields]
                 
     def addDeviceTable(self, device_table: DeviceTable, x0: float, y0: float, cell: str = ""):
         """

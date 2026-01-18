@@ -29,7 +29,8 @@ geomE = sm.GeomGroup()
 
 # Usually we define a write-field region to place our elements
 # Let's use a 2x2 grid of 500-um write fields
-themask.addWriteFieldGrid(500, 0, 0, 2, 2)
+# Let's draw them in layer 10. We can also disable drawing the WFs by setting layer=-1
+themask.addWriteFieldGrid(500, 0, 0, 2, 2,layer=10)
 
 # Now, it's good to place some e-beam marks
 # for multi-layer alignment. A mark is available in base lib
@@ -39,6 +40,18 @@ markdev = smdev.Device.build_registered("BASELIB_CMARK")
 markerset = smlay.MarkerSet("Ebeam1", markdev,
                 x0=-200,y0=-200,mset=4,xdist=900,ydist=900)
 themask.addMarkers(markerset)
+
+# We can fetch the writefield information as dictionary for post-processing
+fieldsInfo = themask.getFieldsInfo()
+# and we can fetch the markers information from the marker set
+markInfo = markerset.getMarkerInfo()
+
+# For Beamfox/Elionix users: this can be turned into metadata for SCON conversion
+layoutInfo = {"size":500,"dots":1000000, "pitch":{"scan":4, "feed":4}, "fields": fieldsInfo, "marks":markInfo}
+# Uncomment the following for Beamfox YAML file
+# import yaml
+# with open("11_Tutorial_LayoutAssembly_ldata.yaml", "w") as f:
+#     yaml.dump(layoutInfo,f)
 
 # Then we proceed with the drawing of various parts 
 # We could make a table of directional couplers connected to gratings
